@@ -1,4 +1,4 @@
-from data_handler import preprocessing
+from data_handler import cleaning
 
 
 # app.py (Flask application)
