@@ -47,7 +47,7 @@ def read_data(file):
 missing_values = data.isnull().sum()
 print("Missing/Null Values for Each Column/Feature of Your Data:\n", missing_values)
 
-def handle_missing_values(data, method):
+def handle_missing_values(data):
   """
   Analyzes and handles missing values in a DataFrame based on the chosen method.
 

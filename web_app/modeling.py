@@ -32,14 +32,14 @@ def model_selection(data, target_column):
   print("- Regression (predict a continuous value, e.g., house price)")
 
   while True:
-    problem_type = input("Enter 'classification' or 'regression': ").lower()
-    if problem_type in ["classification", "regression"]:
+    chosen_model = input("Enter 'classification' or 'regression': ").lower()
+    if chosen_model in ["classification", "regression"]:
       break
     else:
       print("Invalid choice. Please choose 'classification' or 'regression'.")
 
   # Suggest models based on problem type
-  if problem_type == "classification":
+  if chosen_model == "classification":
     print("\n** Common Classification Models:**")
     print("- Logistic Regression (suitable for binary classification problems)")
     print("- Random Forest (powerful and versatile for various classification tasks)")
@@ -53,7 +53,7 @@ def model_selection(data, target_column):
     print("** We will focus on Linear Regression and Decision Tree Regression for now.**")
 
   # User confirmation for model choice (optional)
-  if problem_type == "classification":
+  if chosen_model == "classification":
     print("\n** Would you like to choose between Logistic Regression and Random Forest?**")
     print("(You can always try both models later!)")
     while True:
@@ -93,13 +93,13 @@ def model_selection(data, target_column):
           print("Invalid choice. Please choose 'Logistic Regression' or 'Random Forest'.")
 
   # Default selection based on problem type
-  return problem_type  # You can return the chosen model name here (e.g., 'Logistic Regression')
+  return chosen_model  # You can return the chosen model name here (e.g., 'Logistic Regression')
 
 
 ########################################################################################
 # Data Splitting
 ########################################################################################
-def data_splitting(data, target_col, test_size=0.2, random_state=42):
+def data_splitting(data, target_column, test_size=0.2, random_state=42):
   """
   Guides the user through splitting data into training, validation, and test sets 
   for machine learning tasks, allowing adjustment of training size.
@@ -171,8 +171,8 @@ def data_splitting(data, target_col, test_size=0.2, random_state=42):
 
 
 
-  X = data.drop(target_col, axis=1)  # Separate features (X) and target (y)
-  y = data[target_col]
+  X = data.drop(target_column, axis=1)  # Separate features (X) and target (y)
+  y = data[target_column]
 
   # Perform data splitting based on chosen sizes
   X_train_val, X_test, y_train_val, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
@@ -187,9 +187,9 @@ def data_splitting(data, target_col, test_size=0.2, random_state=42):
   X_train_df = pd.DataFrame(X_train, columns=X.columns)
   X_val_df = pd.DataFrame(X_val, columns=X.columns)
   X_test_df = pd.DataFrame(X_test, columns=X.columns)
-  y_train_df = pd.Series(y_train, name=target_col)
-  y_val_df = pd.Series(y_val, name=target_col)
-  y_test_df = pd.Series(y_test, name=target_col)
+  y_train_df = pd.Series(y_train, name=target_column)
+  y_val_df = pd.Series(y_val, name=target_column)
+  y_test_df = pd.Series(y_test, name=target_column)
 
   # Combine features and target into DataFrames
   train_data = pd.concat([X_train_df, y_train_df], axis=1)

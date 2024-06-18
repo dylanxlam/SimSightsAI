@@ -39,7 +39,7 @@ def upload_data():
 def clean_data_route():
   if request.method == "GET":
     # Display the missing value handling form
-    return render_template("missing_values.html")
+    return render_template("handle_missing_values.html")
   else:
     # Access data from session (replace with your data loading logic)
     data = session.get("uploaded_data")
