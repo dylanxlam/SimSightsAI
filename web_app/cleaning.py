@@ -47,16 +47,16 @@ def read_data(file):
 missing_values = data.isnull().sum()
 print("Missing/Null Values for Each Column/Feature of Your Data:\n", missing_values)
 
-def handle_missing_values(data):
+def handle_missing_values(data, method):
   """
-  Analyzes and guides the user on handling missing values in a DataFrame.
+  Analyzes and handles missing values in a DataFrame based on the chosen method.
 
   Args:
       data (pandas.DataFrame): The DataFrame containing the data.
+      method (str): The chosen method for handling missing values ("deletion", "imputation", "encoding").
 
   Returns:
-      pandas.DataFrame: The DataFrame potentially with imputed missing values
-                          based on the user's choice.
+      pandas.DataFrame: The DataFrame with missing values handled based on the method.
   """
   # Check for missing values
 

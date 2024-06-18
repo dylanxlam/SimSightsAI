@@ -532,10 +532,14 @@ def create_label_encoding(data, categorical_cols=None):
   return data
 
 
+
+target_column = input("Enter the name of the column containing the target variable (the variable you wish to predict/classify):")
+
+
 ########################################################################################
 # Handling Class Imbalance
 ########################################################################################
-def handle_class_imbalance(data, target_col):
+def handle_class_imbalance(data, target_column):
   """
   Provides options to handle class imbalance in a dataset.
 
@@ -549,7 +553,7 @@ def handle_class_imbalance(data, target_col):
 
   # Display class distribution
   print("** Class Distribution:")
-  class_counts = data[target_col].value_counts().sort_values(ascending=False)
+  class_counts = data[target_column].value_counts().sort_values(ascending=False)
   print(class_counts)
 
   # Check for imbalance
@@ -601,16 +605,16 @@ def handle_class_imbalance(data, target_col):
 
     if choice == "undersample":
       rus = RandomUnderSampler(sampling_strategy={majority_class: int(sampling_ratio * majority_count)})
-      data = rus.fit_resample(data, data[target_col])
+      data = rus.fit_resample(data, data[target_column])
       print(f"Undersampled majority class to {int(sampling_ratio * majority_count)} samples.")
     else:
-      sm = SMOTE(sampling_strategy={target_col: "auto"})
-      data = sm.fit_resample(data, data[target_col])
+      sm = SMOTE(sampling_strategy={target_column: "auto"})
+      data = sm.fit_resample(data, data[target_column])
       print(f"Oversampled minority class to match the majority class size.")
 
   # Display final class distribution
   print("** Final Class Distribution:")
-  class_counts = data[target_col].value_counts().sort_values(ascending=False)
+  class_counts = data[target_column].value_counts().sort_values(ascending=False)
   print(class_counts)
 
   return data
@@ -619,7 +623,6 @@ def handle_class_imbalance(data, target_col):
 ########################################################################################
 # Feature selection
 ########################################################################################
-target_column = input("Enter the name of the column containing the target variable (the variable you wish to predict/classify):")
 
 def feature_selection(data, target_column):
   """
@@ -672,8 +675,8 @@ def feature_selection(data, target_column):
     except ValueError:
       print("Invalid input. Please enter an integer.")
 
-  X = data.drop(target_col, axis=1)  # Separate features (X) and target (y)
-  y = data[target_col]
+  X = data.drop(target_column, axis=1)  # Separate features (X) and target (y)
+  y = data[target_column]
 
   selector = SelectKBest(chi2, k=k)  # Use chi-square test for filter
   selector.fit(X, y)

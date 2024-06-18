@@ -1,0 +1,10 @@
+<h2>Choose a Method to Handle Missing Values:</h2>
+<form method="POST" action="/clean_data">
+  {{ form.hidden_tag() }}  <input type="radio" id="deletion" name="method" value="deletion">
+  <label for="deletion">Deletion</label><br>
+  <input type="radio" id="imputation" name="method" value="imputation">
+  <label for="imputation">Imputation</label><br>
+  <input type="radio" id="encoding" name="method" value="encoding">
+  <label for="encoding">Encoding</label><br>
+  <input type="submit" value="Submit">
+</form>
