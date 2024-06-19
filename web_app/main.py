@@ -1,13 +1,22 @@
 from cleaning import read_data, handle_missing_values, identify_and_handle_outliers, handle_duplicates, handle_formatting
 from eda import visualize_numerical, visualize_categorical, analyze_correlations
-from preprocessing import convert_data_types, scale, create_interaction_feature, create_feature_bins, create_custom_features, create_one_hot_encoding, create_label_encoding, handle_class_imbalance, feature_selection
+from preprocessing import convert_data_types, scale, create_interaction_features, create_feature_bins, create_custom_features, create_one_hot_encoding, create_label_encoding, handle_class_imbalance, feature_selection
 from modeling import model_selection, data_splitting, train_model, tune_hyperparameters, evaluate_model
 from analysis import generate_classification_report, visualize_confusion_matrix, plot_learning_curves, plot_roc_curve, plot_precision_recall_curve, explain_with_shap, plot_partial_dependence, analyze_feature_importance, save_model
 
 def main():
     # Reading Data
-    file = input("Please upload your data file. We support CSV, Excel, TSV, and JSON: ")
-    data = read_data(file)
+    # Get user input for file path
+    filepath = input("Please enter the path to your data file (CSV, Excel, TSV, JSON): ")
+
+    try:
+        # Read data using the function
+        data = read_data(filepath)
+        # Process or analyze the data here (assuming data is a DataFrame)
+        print("Data loaded successfully!")
+    except (FileNotFoundError, ValueError) as e:
+        print(f"Error: {e}")
+        data = read_data(filepath)
 
     # Cleaning Data
     cleaned_data = handle_missing_values(data.copy())
@@ -27,7 +36,7 @@ def main():
     print("Data Types for Each Column in Your Data", data_types)
     preprocessed_data = convert_data_types(cleaned_data)
     scale(preprocessed_data)
-    create_interaction_feature(preprocessed_data, categorical_cols=None)
+    create_interaction_features(preprocessed_data, categorical_cols=None)
     create_feature_bins(preprocessed_data, continuous_cols=None, n_bins=5)
     create_custom_features(preprocessed_data)
     create_one_hot_encoding(preprocessed_data, categorical_cols=None)
@@ -56,4 +65,6 @@ def main():
     analyze_feature_importance(trained_model, val_data, feature_names=None)
     save_path = input("Enter the path (including filename) to save the model:")
     save_model(trained_model, save_path)
-    
+
+if __name__ == "__main__":
+    main()

@@ -9,34 +9,37 @@ import numpy as np
 ########################################################################################
 # Reading Data
 ########################################################################################
-file = input("Please upload your data file. We support CSV, Excel, TSV, and JSON")
 
-def read_data(file):
+def read_data(filepath):
     """
-    Reads data from uploaded file (supports CSV, Excel, TSV, JSON).
+    Reads data from a specified file path (supports CSV, Excel, TSV, JSON).
 
     Args:
-        file (object): The uploaded file object from Flask request.
+        filepath (str): The path to the data file.
 
     Returns:
         pandas.DataFrame (or list/dict): The loaded data in a suitable format.
     """
-    # Identify file format based on filename extension or MIME type (consider using magic library)
-    if file.filename.endswith(".csv"):
-        data = pd.read_csv(file)
-    elif file.filename.endswith(".xlsx"):
-        data = pd.read_excel(file)
-    elif file.filename.endswith(".tsv"):
-        data = pd.read_csv(file, sep="\t")  # Use tab separator for TSV
-    elif file.filename.endswith(".json"):
-        try:
-            data = json.load(file)  # Assuming JSON data represents a list or dictionary
-        except json.JSONDecodeError:
-            raise ValueError("Invalid JSON format. Please check your data.")
+    # Identify file format based on filename extension
+    if filepath.endswith(".csv"):
+        data = pd.read_csv(filepath)
+    elif filepath.endswith(".xlsx"):
+        data = pd.read_excel(filepath)
+    elif filepath.endswith(".tsv"):
+        data = pd.read_csv(filepath, sep="\t")  # Use tab separator for TSV
+    elif filepath.endswith(".json"):
+        with open(filepath, 'r') as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                raise ValueError("Invalid JSON format. Please check your data.")
     else:
-        raise ValueError("Unsupported file format. Please upload CSV, Excel, TSV, or JSON files.")
+        raise ValueError("Unsupported file format. Please specify a CSV, Excel, TSV, or JSON file.")
 
     return data
+
+
+
 
 
 ########################################################################################
