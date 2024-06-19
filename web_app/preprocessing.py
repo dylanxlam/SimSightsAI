@@ -533,7 +533,6 @@ def create_label_encoding(data, categorical_cols=None):
 
 
 
-target_column = input("Enter the name of the column containing the target variable (the variable you wish to predict/classify):")
 
 
 ########################################################################################

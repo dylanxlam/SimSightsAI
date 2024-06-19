@@ -64,11 +64,11 @@ def handle_missing_values(data):
   
   missing_values = data.isna()
 
-  if missing_values.sum() == 0:
-    print("Good, no null values to deal with in this dataset!")
+  if missing_values.empty:
+      print("No missing values detected in the data!")
   else:
     # Inform user about missing values and their importance
-    print("There are missing values in your data! It's crucial to address them")
+    print(f"Found... \n\n{missing_values.sum()}\n \nmissing values in the data! It's crucial to address them")
     print("before further analysis. Missing values can skew results and lead to")
     print("inaccurate conclusions. Let's handle them!")
 
