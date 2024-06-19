@@ -10,8 +10,6 @@ import numpy as np
 ########################################################################################
 # Descriptive Statistics
 ########################################################################################
-data_descriptive_statistics = data.describe()
-print("Descriptive Statistics of Your Data:\n", data_descriptive_statistics)
 
 ########################################################################################
 # Data Distribution Visualization

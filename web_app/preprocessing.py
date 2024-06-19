@@ -15,8 +15,6 @@ from sklearn.feature_selection import chi2  # Example statistical test
 ########################################################################################
 # Data Type Conversion
 ########################################################################################
-data_types = data.dtypes
-print("Data Types for Each Column in Your Data")
 
 
 def convert_data_types(data):
@@ -29,6 +27,8 @@ def convert_data_types(data):
   Returns:
       pandas.DataFrame: The DataFrame potentially with changed data types.
   """
+
+  data_types = data.dtypes
 
   # Explain data types in a dictionary for easy reference
   dtype_explanations = {

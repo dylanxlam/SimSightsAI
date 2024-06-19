@@ -43,9 +43,6 @@ def read_data(file):
 # Handling Null Values
 ########################################################################################
 
-# Null Values for each column
-missing_values = data.isnull().sum()
-print("Missing/Null Values for Each Column/Feature of Your Data:\n", missing_values)
 
 def handle_missing_values(data):
   """
@@ -62,6 +59,8 @@ def handle_missing_values(data):
 
   # No missing values
   
+  missing_values = data.isna()
+
   if missing_values.sum() == 0:
     print("Good, no null values to deal with in this dataset!")
   else:
