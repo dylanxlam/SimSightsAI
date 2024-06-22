@@ -58,21 +58,19 @@ def handle_missing_values(data):
   Returns:
       pandas.DataFrame: The DataFrame with missing values handled based on the method.
   """
-  # Check for missing values
 
-  # No missing values
-  
+  # Check for missing values
   missing_values = data.isna()
 
   if missing_values.empty:
       print("No missing values detected in the data!")
   else:
-    # Inform user about missing values and their importance
+    # Inform user about missing values
     print(f"Found... \n\n{missing_values.sum()}\n \nmissing values in the data! It's crucial to address them")
     print("before further analysis. Missing values can skew results and lead to")
     print("inaccurate conclusions. Let's handle them!")
 
-    # Prompt user for null value technique (loop for repeated input validation)
+    # Prompt user for null value technique
     while True:
       method_choice = input("Choose a method to handle missing values (deletion, imputation, encoding): ").lower()
 
@@ -84,50 +82,78 @@ def handle_missing_values(data):
         if confirmation == "y":
           data = data.dropna()  # Drops rows with any missing values
           print("Missing values deleted!")
-          break  # Exit the loop after successful deletion
+          break  # Exit after deletion
         else:
           print("Deletion skipped based on your confirmation.")
 
       # User chooses imputation
       elif method_choice == "imputation":
-        print("Imputation estimates missing values based on other data points.")
-        print("There are different imputation techniques, each with advantages and disadvantages:")
-        print("  - Mean/Median/Mode Imputation (simple but might not be suitable for skewed data).")
-        print("  - Interpolation (estimates missing values based on surrounding values).")
-        print("  - Model-based Imputation (uses machine learning to predict missing values,")
-        print("     more complex but potentially more accurate).")
-        impute_choice = input("Choose an imputation method (mean/median/mode/interpolation): ").lower()
-        if impute_choice in ["mean", "median", "mode"]:
-          # Simple imputation using mean/median/mode
-          if impute_choice == "mean":
-            imputation_strategy = np.mean
-          elif impute_choice == "median":
-            imputation_strategy = np.median
-          else:
-            imputation_strategy = np.mode
-          data = data.fillna(method=imputation_strategy)  # Fill missing values with chosen strategy
-          print(f"Missing values imputed using {impute_choice} strategy!")
-          break  # Exit the loop after successful imputation
-        elif impute_choice == "interpolation":
-          # Interpolation (using linear interpolation here)
-          data = data.interpolate("linear")  # Linear interpolation for missing values
-          print("Missing values imputed using linear interpolation!")
-          break  # Exit the loop after successful interpolation
-        else:
-          print("Invalid imputation method chosen. Skipping imputation.")
+        # Separate handling for categorical and numerical data
+        numerical_cols = data.select_dtypes(include=[np.number])
+        categorical_cols = data.select_dtypes(exclude=[np.number])
 
-      # User chooses encoding
+        # Impute missing values in numerical columns
+        if not numerical_cols.empty:
+          print("Handling missing values in numerical columns...")
+          print("  - Choose an imputation method (mean/median/mode/interpolation): ")
+          impute_choice = input().lower()
+          if impute_choice in ["mean", "median", "mode"]:
+            # Simple imputation using mean/median/mode
+            if impute_choice == "mean":
+              imputation_strategy = np.mean
+            elif impute_choice == "median":
+              imputation_strategy = np.median
+            else:
+              imputation_strategy = np.mode
+            numerical_cols = numerical_cols.fillna(method=imputation_strategy)
+          elif impute_choice == "interpolation":
+            # Interpolation (using linear interpolation here)
+            numerical_cols = numerical_cols.interpolate("linear")
+          else:
+            print("Invalid imputation method chosen. Skipping imputation for numerical columns.")
+
+        # Handle missing values in categorical columns (using mode imputation or deletion)
+        if not categorical_cols.empty:
+          print("Handling missing values in categorical columns...")
+          print("  - Choose a method (mode imputation/deletion): ")
+          cat_method_choice = input().lower()
+          if cat_method_choice == "mode":
+            categorical_cols = categorical_cols.fillna(method="ffill")  # Fill with previous value for ordering
+            for col in categorical_cols:
+              # Use mode to impute the most frequent value
+              mode_value = categorical_cols[col].mode()[0]
+              categorical_cols.loc[categorical_cols[col].isna(), col] = mode_value
+          elif cat_method_choice == "deletion":
+            print("Dropping rows with missing values in categorical columns...")
+            categorical_cols = categorical_cols.dropna()
+          else:
+            print("Invalid method chosen. Keeping missing values in categorical columns.")
+
+        # Combine processed numerical and categorical columns back into the DataFrame
+        data = pd.concat([numerical_cols, categorical_cols], axis=1)
+        print("Missing values handled!")
+        break  # Exit after imputation
+
+      # User chooses encoding (not recommended for missing values)
       elif method_choice == "encoding":
-        print("Encoding creates a new feature indicating the presence or absence of a missing value.")
-        print("This can be informative for some models but increases the number of features.")
-        print("Are you sure you want to proceed with encoding?")
-        confirmation = input("Proceed with encoding (y/n)? ").lower()
-        if confirmation == "y":
-          data = pd.get_dummies(data, dummy_na=True)  # Encode missing values as features
-          print("Missing values encoded as new features!")
-          break  # Exit the loop after successful encoding
-        else:
-          print("Encoding skipped based on your confirmation.")
+        print("Encoding is not recommended for handling missing values. It creates new features.")
+        print("Consider deletion or imputation instead. Would you like to continue with:")
+        print("  1. Deletion")
+        print("  2. Imputation (numerical columns) and mode imputation (categorical columns)")
+        print("  3. Exit function (without handling missing values)")
+        choice = input("Enter your choice (1, 2, or 3): ")
+        if choice == "1":
+          print("Handling missing values with deletion...")
+          data = data.dropna()  # Drop rows/columns with missing values
+          print("Missing values deleted!")
+          break  # Exit after deletion
+        elif choice == "2":
+          # Logic for imputation (already implemented in the function)
+          # (Skip this section to avoid repeating the code)
+          pass
+        elif choice == "3":
+          print("Exiting function without handling missing values.")
+          break  # Exit the function
 
       # Invalid method chosen (loop continues)
       else:
@@ -137,6 +163,9 @@ def handle_missing_values(data):
         print("- encoding")
 
   return data
+
+
+
 
 
 ########################################################################################
@@ -164,7 +193,8 @@ def identify_and_handle_outliers(data):
         # Identify outliers based on IQR outlier rule
         lower_bound = Q1 - (1.5 * IQR)
         upper_bound = Q3 + (1.5 * IQR)
-        outlier_count = (numerical_cols[col] < lower_bound | numerical_cols[col] > upper_bound).sum()
+        outlier_count = ((numerical_cols[col] < lower_bound) & (numerical_cols[col] > upper_bound)).sum()
+
 
     if outlier_count > 0:
         outliers_exist = True
