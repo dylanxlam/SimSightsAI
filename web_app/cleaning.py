@@ -332,6 +332,8 @@ def handle_formatting(data):
     for col in date_cols:
       print(f"  - {col}")
     print("  (Inconsistent date formats can lead to errors during analysis.)\n")
+  else:
+     print("No potential date formatting inconsistencies found.")
 
   # Check for currency formatting inconsistencies
   currency_cols = [col for col in data if pd.api.types.is_numeric_dtype(data[col]) and any(char in data[col] for char in r"$£€¥₱")]
@@ -340,6 +342,8 @@ def handle_formatting(data):
     for col in currency_cols:
       print(f"  - {col} (mixed currency symbols or no symbol)")
     print("  (Inconsistent currency formatting can hinder analysis.)\n")
+  else:
+    print("No potential currency formatting inconsistencies found")
 
   # Offer choices if inconsistencies found
   if date_cols or currency_cols:

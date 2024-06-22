@@ -50,7 +50,7 @@ def convert_data_types(data):
     while True:
       # Ask for column and desired data type
       col_to_change = input("Enter the column name to change the data type: ").lower()
-      new_dtype = input("Enter the desired new data type (int, float, object, etc.): ").lower()
+      new_dtype = input("Enter the desired new data type (int64, float64, object, etc.): ").lower()
 
       # Check if column exists and new data type is valid
       if col_to_change in data.columns and new_dtype in dtype_explanations.keys():
