@@ -88,8 +88,8 @@ def scale(data):
       pandas.DataFrame: The transformed DataFrame with addressed skewness and scaling/normalization.
   """
   try: 
-    numerical_cols = data.select_dtypes(include=[np.number])
-    if not numerical_cols:
+    numerical_cols = data.select_dtypes(include=[np.number]).columns.tolist()
+    if len(numerical_cols) == 0:
       print("No numerical columns found in the dataset.")
       return data
 

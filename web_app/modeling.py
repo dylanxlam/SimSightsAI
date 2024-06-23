@@ -4,6 +4,9 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
+from sklearn.linear_model import LogisticRegression, LinearRegression
+from sklearn.ensemble import RandomForestClassifier, DecisionTreeRegressor
+
 
 
 
@@ -69,31 +72,29 @@ def model_selection(data, target_column):
       while True:
         model_choice = input("Choose 'Logistic Regression' or 'Random Forest': ").lower()
         if model_choice in ["logistic regression", "random forest"]:
-          return model_choice
+          if model_choice == "logistic regression":
+            return LogisticRegression()
+          else:
+            return RandomForestClassifier()
         else:
           print("Invalid choice. Please choose 'Logistic Regression' or 'Random Forest'.")
+    else:
+      # Default selection
+      return LogisticRegression()
   else:
-    print("\n** Would you like to choose between Linear Regression and Decision Tree Regression?**")
-    print("(You can always try both models later!)")
-    while True:
-      choice = input("Enter 'y' or 'n': ").lower()
-      if choice in ["y", "n"]:
-        break
-      else:
-        print("Invalid choice. Please choose 'y' or 'n'.")
     if choice == "y":
-      print("\n** Briefly:")
-      print("- Linear Regression: Simple, interpretable for linear relationships.")
-      print("- Decision Tree Regression: Flexible for non-linear relationships.")
       while True:
         model_choice = input("Choose 'Linear Regression' or 'Decision Tree Regression': ").lower()
         if model_choice in ["linear regression", "decision tree regression"]:
-          return model_choice
+          if model_choice == "linear regression":
+            return LinearRegression()  # Return the model object
+          else:
+            return DecisionTreeRegressor()  # Return the model object
         else:
-          print("Invalid choice. Please choose 'Logistic Regression' or 'Random Forest'.")
-
-  # Default selection based on problem type
-  return chosen_model  # You can return the chosen model name here (e.g., 'Logistic Regression')
+          print("Invalid choice. Please choose 'Linear Regression' or 'Decision Tree Regression'.")
+    else:
+      # Default selection (e.g., LinearRegression())
+      return LinearRegression()  # Return the default model object
 
 
 ########################################################################################
