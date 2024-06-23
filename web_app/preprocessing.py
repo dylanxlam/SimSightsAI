@@ -164,13 +164,25 @@ def scale(data):
           else:
             scaler = MinMaxScaler(feature_range=(0, 1))
 
-          # Check for missing values
-          if data[numerical_cols].isnull().sum().any():
+          missing_values_found = False
+          for col in numerical_cols:
+            if data[col].isnull().values.any():
+              missing_values_found = True
+              break  # Stop iterating if missing values are found
+
+
+          if missing_values_found:  
+            # Missing values found
+            print(f"Missing value sum: {data[numerical_cols].isnull().sum()}")  # Print the sum (optional)
             print("Warning: Missing values detected in numerical columns. Consider imputation before scaling.")
           else:
             # Transform data directly (assuming no missing values)
             transformed_data = scaler.fit_transform(data[numerical_cols])
             data[numerical_cols] = transformed_data
+
+          # Transform data directly (assuming no missing values)
+          transformed_data = scaler.fit_transform(data[numerical_cols])
+          data[numerical_cols] = transformed_data
 
           print(f"Applied {method} scaling to numerical features.")
           break  # Exit the loop if a valid choice is made

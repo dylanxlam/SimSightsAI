@@ -31,6 +31,11 @@ def visualize_numerical(data):
     print(f"  {i+1}. {col}")
 
   while True:
+    feature_choice = input("Enter your choice (1-{} or 'q' to quit): ".format(len(numeric_cols)))
+    if feature_choice.lower() == 'q':
+      print("Exiting visualization.")
+      return  # Exit the function if 'q' is entered
+
     try:
       feature_choice = int(input("Enter your choice (1-{} or 'q' to quit): ".format(len(numeric_cols))))
       if 1 <= feature_choice <= len(numeric_cols):
@@ -149,6 +154,10 @@ def visualize_categorical(data):
     print(f"  {i+1}. {col}")
 
   while True:
+    feature_choice = input("Enter your choice (1-{} or 'q' to quit): ".format(len(categorical_cols)))
+    if feature_choice.lower() == 'q':
+      print("Exiting visualization.")
+      return  # Exit the function if 'q' is entered
     try:
       feature_choice = int(input("Enter your choice (1-{} or 'q' to quit): ".format(len(categorical_cols))))
       if 1 <= feature_choice <= len(categorical_cols):
