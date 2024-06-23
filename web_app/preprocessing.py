@@ -164,12 +164,17 @@ def scale(data):
           else:
             scaler = MinMaxScaler(feature_range=(0, 1))
 
-          # **Fix:** Transform data directly, avoiding indexing with numerical values
-          transformed_data = scaler.fit_transform(data[numerical_cols])
-          data[numerical_cols] = transformed_data
+          # Check for missing values
+          if data[numerical_cols].isnull().sum().any():
+            print("Warning: Missing values detected in numerical columns. Consider imputation before scaling.")
+          else:
+            # Transform data directly (assuming no missing values)
+            transformed_data = scaler.fit_transform(data[numerical_cols])
+            data[numerical_cols] = transformed_data
 
           print(f"Applied {method} scaling to numerical features.")
           break  # Exit the loop if a valid choice is made
+
 
         elif method == "skip":
           print("Skipping scaling/normalization.")
