@@ -158,17 +158,19 @@ def scale(data):
       while True:  # Loop until a valid choice is made
         method = input("Choose scaling/normalization method (standard/minmax/skip): ").lower()
         if method in ["standard", "minmax"]:
+          scaler = None  # Initialize scaler outside the loop (prevents recreation)
           if method == "standard":
             scaler = StandardScaler()
-            transformed_data = scaler.fit_transform(data[numerical_cols])
-            data[numerical_cols] = transformed_data
-            print(f"Applied standard scaling to numerical features.")
-
           else:
             scaler = MinMaxScaler(feature_range=(0, 1))
-            data[numerical_cols] = scaler.fit_transform(data[numerical_cols])
-            print(f"Applied min-max scaling to numerical features (range 0-1).")
+
+          # **Fix:** Transform data directly, avoiding indexing with numerical values
+          transformed_data = scaler.fit_transform(data[numerical_cols])
+          data[numerical_cols] = transformed_data
+
+          print(f"Applied {method} scaling to numerical features.")
           break  # Exit the loop if a valid choice is made
+
         elif method == "skip":
           print("Skipping scaling/normalization.")
           break
