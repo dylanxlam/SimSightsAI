@@ -87,118 +87,113 @@ def scale(data):
   Returns:
       pandas.DataFrame: The transformed DataFrame with addressed skewness and scaling/normalization.
   """
-  numerical_cols = data.select_dtypes(include=[np.number])
-  skewed_cols = []  # List to store column names with skewness
+  try: 
+    numerical_cols = data.select_dtypes(include=[np.number])
+    if not numerical_cols:
+      print("No numerical columns found in the dataset.")
+      return data
 
-  # Threshold for skewness (adjust as needed)
-  skewness_threshold = 0.5
+    skewed_cols = []  # List to store column names with skewness
 
-  for col in numerical_cols:
-    # Calculate skewness
-    skew = data[col].skew()
-    if abs(skew) > skewness_threshold:
-      skewed_cols.append(col)
-      print(f"Column '{col}' appears skewed (skewness: {skew:.2f}).")
+    # Threshold for skewness (adjust as needed)
+    skewness_threshold = 0.5
+
+    for col in numerical_cols:
+      # Calculate skewness
+      skew = data[col].skew()
+      if abs(skew) > skewness_threshold:
+        skewed_cols.append(col)
+        print(f"Column '{col}' appears skewed (skewness: {skew:.2f}).")
 
 
-      # Inform decision-making
-      print("Here's a brief explanation of the available correction methods:")
-      print("  - Log transformation (log(x + 1)): This method is often effective for right-skewed data (where values are concentrated on the left side of the distribution).")
-      print("    It compresses the larger values and stretches the smaller ones, aiming for a more symmetrical distribution.")
-      print("  - Square root transformation (sqrt(x)): This method can be helpful for moderately skewed data, positive-valued features, or data with a large number of zeros.")
-      print("    It reduces the influence of extreme values and can bring the distribution closer to normality.")
-      print("**Please consider the characteristics of your skewed feature(s) when making your choice.**")
-      print("If you're unsure, you can experiment with both methods and compare the results visually (e.g., using histograms) to see which one normalizes the data more effectively for your specific case.")
+        # Inform decision-making
+        print("Here's a brief explanation of the available correction methods:")
+        print("  - Log transformation (log(x + 1)): This method is often effective for right-skewed data (where values are concentrated on the left side of the distribution).")
+        print("    It compresses the larger values and stretches the smaller ones, aiming for a more symmetrical distribution.")
+        print("  - Square root transformation (sqrt(x)): This method can be helpful for moderately skewed data, positive-valued features, or data with a large number of zeros.")
+        print("    It reduces the influence of extreme values and can bring the distribution closer to normality.")
+        print("**Please consider the characteristics of your skewed feature(s) when making your choice.**")
+        print("If you're unsure, you can experiment with both methods and compare the results visually (e.g., using histograms) to see which one normalizes the data more effectively for your specific case.")
 
-      # User prompt for addressing skewness
-      action = input("Do you want to address the skewness (y/n)? ").lower()
-      if action == "y":
-        
+        # User prompt for addressing skewness
+        action = input("Do you want to address the skewness (y/n)? ").lower()
+        if action == "y":
+          
 
-        # User chooses to address skewness
-        while True:  # Loop until a valid choice is made
-          fix_method = input("Choose a correction method (log/sqrt/none): ").lower()
-          if fix_method in ["log", "sqrt"]:
-            # Apply transformation (log or sqrt)
-            if fix_method == "log":
-              data[col] = np.log(data[col] + 1)  # Avoid log(0) errors by adding 1
-              print(f"Applied log transformation to column '{col}'.")
+          # User chooses to address skewness
+          while True:  # Loop until a valid choice is made
+            fix_method = input("Choose a correction method (log/sqrt/none): ").lower()
+            if fix_method in ["log", "sqrt"]:
+              # Apply transformation (log or sqrt)
+              if fix_method == "log":
+                data[col] = np.log(data[col] + 1)  # Avoid log(0) errors by adding 1
+                print(f"Applied log transformation to column '{col}'.")
+              else:
+                data[col] = np.sqrt(data[col])
+                print(f"Applied square root transformation to column '{col}'.")
+              break  # Exit the loop if a valid choice is made
             else:
-              data[col] = np.sqrt(data[col])
-              print(f"Applied square root transformation to column '{col}'.")
-            break  # Exit the loop if a valid choice is made
-          else:
-            print("Invalid choice. Please choose 'log', 'sqrt', or 'none'.")
+              print("Invalid choice. Please choose 'log', 'sqrt', or 'none'.")
 
-      else:
-        print(f"Skewness in '{col}' remains unaddressed.")
-    
+        else:
+          print(f"Skewness in '{col}' remains unaddressed.")
+      
+      if not skewed_cols:
+        print("No significant skewness detected in numerical columns.")
+
+    # User prompt for scaling/normalization (if applicable)
+    if len(numerical_cols) > 0:
+
+      print("Here's a brief explanation of the available scaling/normalization methods:")
+      print("  - Standard scaling: This method transforms features by subtracting the mean and dividing by the standard deviation.")
+      print("    This results in features centered around zero with a standard deviation of 1.")
+      print("    It's suitable for algorithms that assume a normal distribution of features (e.g., Logistic Regression, Support Vector Machines).")
+      print("  - Min-max scaling: This method scales each feature to a specific range, typically between 0 and 1.")
+      print("    It achieves this by subtracting the minimum value and then dividing by the difference between the maximum and minimum values in the feature.")
+      print("    This can be useful for algorithms that are sensitive to the scale of features (e.g., K-Nearest Neighbors).")
+      print("**Choosing the right method depends on your data and the algorithm you're using.**")
+      print("  - If you're unsure about the underlying distribution of your data, standard scaling might be a safer choice as it doesn't make assumptions about normality.")
+      print("  - If your algorithm is sensitive to feature scales and doesn't assume normality, min-max scaling might be preferable.")
+      print("Consider the characteristics of your data and algorithm when making your decision. You can also experiment with both methods")
+      print("and compare the results using model performance metrics to see which one works best for your specific case.")
+
+      action = input("Do you want to scale or normalize the numerical features (y/n)? ").lower()
+      if action == "y":
+        while True:  # Loop until a valid choice is made
+          method = input("Choose scaling/normalization method (standard/minmax/skip): ").lower()
+          if method in ["standard", "minmax"]:
+            scaler = None  # Initialize scaler outside the loop (prevents recreation)
+            scaler = StandardScaler() if method == "standard" else MinMaxScaler(feature_range=(0, 1))
+
+            missing_values_found = data[numerical_cols].isnull().any().any()
+
+            if missing_values_found:  
+              print("Warning: Missing values detected in numerical columns. Consider imputation before scaling.")
+              print(f"Missing value sum: {data[numerical_cols].isnull().sum()}")
+            else:
+              # Transform data directly (assuming no missing values)
+              transformed_data = scaler.fit_transform(data[numerical_cols])
+              data.loc[:, numerical_cols] = transformed_data
+
+            print(f"Applied {method} scaling to numerical features.")
+            break  # Exit the loop if a valid choice is made
+
+
+          elif method == "skip":
+            print("Skipping scaling/normalization.")
+            break
+          else:
+            print("Invalid choice. Please choose 'standard', 'minmax', or 'skip'.")
+
+
     if not skewed_cols:
       print("No significant skewness detected in numerical columns.")
 
-  # User prompt for scaling/normalization (if applicable)
-  if len(numerical_cols) > 0:
+    return data
 
-    print("Here's a brief explanation of the available scaling/normalization methods:")
-    print("  - Standard scaling: This method transforms features by subtracting the mean and dividing by the standard deviation.")
-    print("    This results in features centered around zero with a standard deviation of 1.")
-    print("    It's suitable for algorithms that assume a normal distribution of features (e.g., Logistic Regression, Support Vector Machines).")
-    print("  - Min-max scaling: This method scales each feature to a specific range, typically between 0 and 1.")
-    print("    It achieves this by subtracting the minimum value and then dividing by the difference between the maximum and minimum values in the feature.")
-    print("    This can be useful for algorithms that are sensitive to the scale of features (e.g., K-Nearest Neighbors).")
-    print("**Choosing the right method depends on your data and the algorithm you're using.**")
-    print("  - If you're unsure about the underlying distribution of your data, standard scaling might be a safer choice as it doesn't make assumptions about normality.")
-    print("  - If your algorithm is sensitive to feature scales and doesn't assume normality, min-max scaling might be preferable.")
-    print("Consider the characteristics of your data and algorithm when making your decision. You can also experiment with both methods")
-    print("and compare the results using model performance metrics to see which one works best for your specific case.")
-
-    action = input("Do you want to scale or normalize the numerical features (y/n)? ").lower()
-    if action == "y":
-
-      while True:  # Loop until a valid choice is made
-        method = input("Choose scaling/normalization method (standard/minmax/skip): ").lower()
-        if method in ["standard", "minmax"]:
-          scaler = None  # Initialize scaler outside the loop (prevents recreation)
-          if method == "standard":
-            scaler = StandardScaler()
-          else:
-            scaler = MinMaxScaler(feature_range=(0, 1))
-
-          missing_values_found = False
-          for col in numerical_cols:
-            if data[col].isnull().values.any():
-              missing_values_found = True
-              break  # Stop iterating if missing values are found
-
-
-          if missing_values_found:  
-            # Missing values found
-            print(f"Missing value sum: {data[numerical_cols].isnull().sum()}")  # Print the sum (optional)
-            print("Warning: Missing values detected in numerical columns. Consider imputation before scaling.")
-          else:
-            # Transform data directly (assuming no missing values)
-            transformed_data = scaler.fit_transform(data[numerical_cols])
-            data[numerical_cols] = transformed_data
-
-          # Transform data directly (assuming no missing values)
-          transformed_data = scaler.fit_transform(data[numerical_cols])
-          data[numerical_cols] = transformed_data
-
-          print(f"Applied {method} scaling to numerical features.")
-          break  # Exit the loop if a valid choice is made
-
-
-        elif method == "skip":
-          print("Skipping scaling/normalization.")
-          break
-        else:
-          print("Invalid choice. Please choose 'standard', 'minmax', or 'skip'.")
-
-
-  if not skewed_cols:
-    print("No significant skewness detected in numerical columns.")
-  return data
-
+  except Exception as e:
+    print(f"An error occurred during scaling: {str(e)}")
+    return data
 
 ########################################################################################
 # Creating Interaction Features
