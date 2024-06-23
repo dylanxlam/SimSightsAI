@@ -160,8 +160,10 @@ def scale(data):
         if method in ["standard", "minmax"]:
           if method == "standard":
             scaler = StandardScaler()
-            data[numerical_cols] = scaler.fit_transform(data[numerical_cols])
+            transformed_data = scaler.fit_transform(data[numerical_cols])
+            data[numerical_cols] = transformed_data
             print(f"Applied standard scaling to numerical features.")
+
           else:
             scaler = MinMaxScaler(feature_range=(0, 1))
             data[numerical_cols] = scaler.fit_transform(data[numerical_cols])

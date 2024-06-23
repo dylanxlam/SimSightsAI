@@ -7,7 +7,7 @@ from analysis import generate_classification_report, visualize_confusion_matrix,
 def main():
     # Reading Data
     # Get user input for file path
-    filepath = input("Please enter the path to your data file (CSV, Excel, TSV, JSON): ")
+    filepath = input("\n\nPlease enter the path to your data file (CSV, Excel, TSV, JSON): ")
 
     try:
         # Read data using the function
