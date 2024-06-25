@@ -22,7 +22,7 @@ import pickle
 ########################################################################################
 # Classification Reports
 ########################################################################################
-def generate_classification_report(trained_model, val_data):
+def generate_classification_report(trained_model, val_data, predictions, target_column):
   """
   Guides the user through generating a classification report for the trained model on the validation data.
 
@@ -34,29 +34,17 @@ def generate_classification_report(trained_model, val_data):
   print("\n** Generating a classification report...**")
   print("This report provides a detailed breakdown of the model's performance for each class in the classification task.")
 
-  # Make predictions on the validation data
-  predictions = trained_model.predict(val_data.drop("target", axis=1))
 
-  # Confirmation for Report Generation
-  print("\n** Would you like to generate a classification report? (y/n) **")
-  while True:
-    choice = input().lower()
-    if choice in ["y", "n"]:
-      break
-    else:
-      print("Invalid choice. Please choose 'y' or 'n'.")
 
-  if choice == "y":
-    # Generate and display the report
-    report = classification_report(val_data["target"], predictions, output_dict=True)
-    print("\n** Classification Report:**")
-    for class_name, metrics in report.items():
-      print(f"\n** Class: {class_name} **")
-      for metric_name, value in metrics.items():
-        print(f"  - {metric_name}: {value:.4f}")  # Format metric values
 
-  else:
-    print("\n** Skipping classification report generation.**")
+  # Generate and display the report
+  report = classification_report(val_data[target_column], predictions, output_dict=True)
+  print("\n** Classification Report:**")
+  for class_name, metrics in report.items():
+    print(f"\n** Class: {class_name} **")
+    for metric_name, value in metrics.items(): 
+      print(f"  - {metric_name}: {value:.4f}")  # Format metric values
+
 
   return report  # Optional: Return the report dictionary (if generated)
 

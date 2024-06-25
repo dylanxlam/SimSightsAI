@@ -5,7 +5,9 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection import GridSearchCV
 from sklearn.linear_model import LogisticRegression, LinearRegression
-from sklearn.ensemble import RandomForestClassifier, DecisionTreeRegressor
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.preprocessing import LabelEncoder
+
 
 
 
@@ -84,12 +86,12 @@ def model_selection(data, target_column):
   else:
     if choice == "y":
       while True:
-        model_choice = input("Choose 'Linear Regression' or 'Decision Tree Regression': ").lower()
+        model_choice = input("Choose 'Linear Regression' or 'Random Forest': ").lower()
         if model_choice in ["linear regression", "decision tree regression"]:
           if model_choice == "linear regression":
             return LinearRegression()  # Return the model object
           else:
-            return DecisionTreeRegressor()  # Return the model object
+            return RandomForestClassifier()  # Return the model object
         else:
           print("Invalid choice. Please choose 'Linear Regression' or 'Decision Tree Regression'.")
     else:
@@ -204,7 +206,7 @@ def data_splitting(data, target_column, test_size=0.2, random_state=42):
 ########################################################################################
 # Model Training
 ########################################################################################
-def train_model(chosen_model, train_data, val_data, test_data, hyperparameter_options=None):
+def train_model(chosen_model, train_data, val_data, test_data, target_column, hyperparameter_options=None):
   """
   Guides the user through training a machine learning model with interactive hyperparameter tuning (optional).
 
@@ -239,19 +241,45 @@ def train_model(chosen_model, train_data, val_data, test_data, hyperparameter_op
       chosen_model = tuned_model  # Update chosen_model with the tuned version
 
   # Informative message about chosen model (**moved after Hyperparameter Tuning**)
-  print(f"\n** You have chosen to train a {type(chosen_model).__name__} model.**")
+  print(f"\n**You have chosen to train a {type(chosen_model).__name__} model.**")
+
+  # Prepare the data
+  X_train = train_data.drop(target_column, axis=1)
+  y_train = train_data[target_column]
+
+  categorical_columns = X_train.select_dtypes(include=['object']).columns
+
+  # Encode categorical variables
+  if len(categorical_columns) > 0:
+    print("\n** Verifying that categorical variables are encoded...**")
+    X_train = pd.get_dummies(X_train, columns=categorical_columns)
+
+    # Ensure val_data and test_data have the same columns as X_train
+    X_val = pd.get_dummies(val_data.drop(target_column, axis=1), columns=categorical_columns)
+
+    # Add missing columns to val and test data
+    for col in X_train.columns:
+      if col not in X_val.columns:
+        X_val[col] = 0
+
+    X_val = X_val[X_train.columns]
+
+    if y_train.dtype == 'object':
+      label_encoder = LabelEncoder()
+      y_train = label_encoder.fit_transform(y_train)
+      y_val = label_encoder.transform(val_data[target_column])
+    else:
+      y_val = val_data[target_column]
+
+
+    if isinstance(chosen_model, LogisticRegression):
+      chosen_model.set_params(max_iter=1000)
 
   # Train the model (**use the updated chosen_model**)
-  print("\n** Training the model...**")
-  trained_model = chosen_model.fit(train_data.drop("target", axis=1), train_data["target"])  # Separate features and target
+  print("\n**Training the model...**")
+  trained_model = chosen_model.fit(X_train, y_train)
 
-  # Model Evaluation (Basic)
-  print("\n** Evaluating the model on the validation data...**")
-  # Implement basic evaluation metrics here (e.g., accuracy, precision, recall)
-  # This section would involve using the trained model to make predictions on the validation data
-  # and then calculating relevant evaluation metrics based on the true target values.
-  # The specific metrics would depend on the machine learning task (classification, regression, etc.).
-  print("** Model evaluation metrics will be displayed based on the chosen model and task. This functionality is not included in this example.  **")
+  print(f"\n{type(chosen_model).__name__} model was successfully trained!")
 
   # Return the trained model
   return trained_model
@@ -260,7 +288,7 @@ def train_model(chosen_model, train_data, val_data, test_data, hyperparameter_op
 ########################################################################################
 # Hyperparameter Tuning
 ########################################################################################
-def tune_hyperparameters(model_class, train_data, val_data, hyperparameter_grid):
+def tune_hyperparameters(model_class, train_data, val_data, test_data, target_column, hyperparameter_grid):
   """
   Guides the user through hyperparameter tuning for a chosen machine learning model class.
 
@@ -282,13 +310,42 @@ def tune_hyperparameters(model_class, train_data, val_data, hyperparameter_grid)
   print(f"\n** You are tuning hyperparameters for the {model_class.__name__} model class.**")
 
 
+  X_train = train_data.drop(target_column, axis=1)
+  y_train = train_data[target_column]
+
+
+  categorical_columns = X_train.select_dtypes(include=['object']).columns
+
+  # Encode categorical variables
+  if len(categorical_columns) > 0:
+    print("\n** Verifying that categorical variables are encoded...**")
+    X_train = pd.get_dummies(X_train, columns=categorical_columns)
+
+    # Ensure val_data and test_data have the same columns as X_train
+    X_val = pd.get_dummies(val_data.drop(target_column, axis=1), columns=categorical_columns)
+
+    # Add missing columns to val and test data
+    for col in X_train.columns:
+      if col not in X_val.columns:
+        X_val[col] = 0
+
+    X_val = X_val[X_train.columns]
+
+    if y_train.dtype == 'object':
+      label_encoder = LabelEncoder()
+      y_train = label_encoder.fit_transform(y_train)
+      y_val = label_encoder.transform(val_data[target_column])
+    else:
+      y_val = val_data[target_column]
 
   # Create the GridSearchCV object
-  grid_search = GridSearchCV(model_class(), hyperparameter_grid, cv=5, scoring="accuracy")  # Replace 'accuracy' with appropriate metric
+  grid_search = GridSearchCV(model_class(), hyperparameter_grid, cv=5, scoring="accuracy", max_iter=1000)  # Replace 'accuracy' with appropriate metric
+
+
 
   # Train the model with different hyperparameter combinations
   print("\n** Training the model with different hyperparameter combinations...**")
-  grid_search.fit(train_data.drop("target", axis=1), train_data["target"])
+  grid_search.fit(X_train, y_train)
 
   # Display the best model and its parameters
   print("\n** The best model found based on validation performance:**")
@@ -301,7 +358,7 @@ def tune_hyperparameters(model_class, train_data, val_data, hyperparameter_grid)
 ########################################################################################
 # Model Evaluation
 ########################################################################################
-def evaluate_model(trained_model, val_data):
+def evaluate_model(trained_model, train_data, val_data, test_data, target_column):
   """
   Guides the user through basic model evaluation on the validation data, providing explanations for commonly used metrics.
 
@@ -312,42 +369,45 @@ def evaluate_model(trained_model, val_data):
 
   print("\n** Evaluating the model's performance on the validation data...**")
   print("This helps us understand how well the model generalizes to unseen data.")
+  X_train = train_data.drop(target_column, axis=1)
+  y_train = train_data[target_column]
+
+  categorical_columns = X_train.select_dtypes(include=['object']).columns
+
+  # Encode categorical variables
+  if len(categorical_columns) > 0:
+    print("\n** Verifying that categorical variables are encoded...**")
+    X_train = pd.get_dummies(X_train, columns=categorical_columns)
+
+    # Ensure val_data and test_data have the same columns as X_train
+    X_val = pd.get_dummies(val_data.drop(target_column, axis=1), columns=categorical_columns)
+
+    # Add missing columns to val and test data
+    for col in X_train.columns:
+      if col not in X_val.columns:
+        X_val[col] = 0
+
+    X_val = X_val[X_train.columns]
+
+
 
   # Make predictions on the validation data
-  predictions = trained_model.predict(val_data.drop("target", axis=1))
+  predictions = trained_model.predict(X_val)
 
   # Choose appropriate evaluation metrics based on the task (classification/regression)
   from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
   # Classification Task Example (assuming model predicts class labels)
   if not hasattr(trained_model, "predict_proba"):
-    metric_value = accuracy_score(val_data["target"], predictions)
+    metric_value = accuracy_score(val_data[target_column], predictions)
   # For models with probability prediction capabilities (classification)
   else:
     # Choose appropriate metric based on task requirements (e.g., accuracy, precision, recall, F1)
-    metric_value = accuracy_score(val_data["target"], predictions)  # Replace with the most relevant metric
+    metric_value = accuracy_score(val_data[target_column], predictions)  # Replace with the most relevant metric
 
   # Informative message about the chosen metric
   if metric_value is not None:
-    print(f"\n** Model performance on the validation data based on {metric_value.__name__}: {metric_value:.4f}**")  # Replace with metric name and formatting
+    print(f"\n**Model performance on the validation data based on accuracy score: {metric_value:.4f} out of 1.0000**")  # Replace with metric name and formatting
 
-  # Interactive explanation of the metric (optional)
-  if metric_value.__name__ in ["accuracy_score", "precision_score", "recall_score", "f1_score"]:
-    if metric_value.__name__ == "accuracy_score":
-      print("\n** Accuracy represents the proportion of correct predictions made by the model.**")
-      print("A higher accuracy indicates better overall performance for classification tasks.")
-    elif metric_value.__name__ == "precision_score":
-      print("\n** Precision represents the proportion of positive predictions that were actually correct.**")
-      print("It tells us how good the model is at identifying true positives, minimizing false positives.")
-    elif metric_value.__name__ == "recall_score":
-      print("\n** Recall represents the proportion of actual positive cases that were correctly identified by the model.**")
-      print("It tells us how good the model is at capturing all the relevant positive cases, minimizing false negatives.")
-    elif metric_value.__name__ == "f1_score":
-      print("\n** F1-score (harmonic mean of precision and recall) is a balanced measure that considers both precision and recall.**")
-      print("A higher F1-score indicates a better balance between these two metrics.")
-  else:
-    print(f"\n** The chosen metric '{metric_value.__name__}' is not currently explained here. Refer to relevant documentation for its interpretation.**")
 
-  print("\n** More comprehensive evaluation metrics might be explored for deeper insights.**")
-
-  return metric_value  # Optional: Return the metric value for further analysis
+  return metric_value, predictions  # Optional: Return the metric value for further analysis

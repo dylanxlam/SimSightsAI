@@ -48,14 +48,20 @@ def main():
     # Modeling
     chosen_model = model_selection(preprocessed_data, target_column)
     train_data, val_data, test_data = data_splitting(preprocessed_data, target_column, test_size=0.2, random_state=42)
-    trained_model = train_model(chosen_model, train_data, val_data, test_data, hyperparameter_options=None)
-    hyperparameter_grid = {"n_estimators": [100, 200], "max_depth": [3, 5]} # lengthen
-    model_class = chosen_model.__class__ # Correct?
-    tune_hyperparameters(model_class, train_data, val_data, hyperparameter_grid)
-    evaluate_model(trained_model, val_data)
+    trained_model = train_model(chosen_model, train_data, val_data, test_data, target_column, hyperparameter_options=None)
+    hyperparameter_grid = {
+    'C': [0.001, 0.01, 0.1, 1, 10],
+    'solver': ['liblinear', 'lbfgs', 'sag']  # Example hyperparameters for LogisticRegression
+    }
+    model_class = chosen_model.__class__ 
+    best_model = tune_hyperparameters(model_class, train_data, val_data, test_data, target_column, hyperparameter_grid)
+    trained_model = train_model(best_model, train_data, val_data, test_data, target_column)
+
+    evaluate_model(trained_model, train_data, val_data, test_data, target_column)
+    metric_value, predictions = evaluate_model(trained_model, train_data, val_data, test_data, target_column)
 
     # Model Analysis
-    generate_classification_report(trained_model, val_data)
+    generate_classification_report(trained_model, val_data, predictions, target_column)
     visualize_confusion_matrix(trained_model, val_data)
     plot_learning_curves(trained_model, train_data, val_data)
     plot_roc_curve(trained_model, val_data)
