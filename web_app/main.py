@@ -63,7 +63,9 @@ def main():
     generate_classification_report(trained_model, val_data, predictions, target_column)
     visualize_confusion_matrix(trained_model, val_data, predictions, target_column)
     plot_learning_curves(trained_model, train_data, val_data, target_column)
-    plot_roc_curve(trained_model, val_data, target_column)
+    from sklearn.linear_model import LogisticRegression
+    if isinstance(chosen_model, LogisticRegression):
+        plot_roc_curve(trained_model, val_data, target_column)
     plot_precision_recall_curve(trained_model, val_data, target_column)
     explain_with_shap(trained_model, val_data, target_column, explainer_type="force_plot")
     plot_partial_dependence(trained_model, val_data, target_column, feature_names=None)

@@ -64,12 +64,12 @@ def visualize_confusion_matrix(trained_model, val_data, predictions, target_colu
       val_data (pandas.DataFrame): The DataFrame containing the validation data (features and target).
   """
 
-  print("\n** Visualizing the confusion matrix...**")
-  print("This helps us understand how often the model correctly classified each class and where it made mistakes.")
 
 
   # Confirmation for Confusion Matrix Visualization
+  print("\nConfusion matrices help us understand how often the model correctly classified each class and where it made mistakes.")
   print("\n** Would you like to visualize the confusion matrix? (y/n) **")
+
   while True:
     choice = input().lower()
     if choice in ["y", "n"]:
@@ -79,8 +79,13 @@ def visualize_confusion_matrix(trained_model, val_data, predictions, target_colu
 
   if choice == "y":
     # Generate and display the confusion matrix (using library like seaborn)
+    print("\n** Visualizing the confusion matrix...**")
+    print("Exit out of the visualization to continue with this program.")
+
     try:
       import seaborn as sns  # Import seaborn for visualization (optional)
+      import matplotlib.pyplot as plt  # Explicitly import matplotlib for plt.show()
+
       sns.heatmap(confusion_matrix(val_data[target_column], predictions), annot=True, fmt="d")  # Annotate and format
       plt.show()  # Display the heatmap
     except ModuleNotFoundError:
@@ -108,11 +113,11 @@ def plot_learning_curves(trained_model, train_data, val_data, target_column):
       val_data (pandas.DataFrame): The DataFrame containing the validation data (features and target).
   """
 
-  print("\n** Visualizing learning curves...**")
-  print("Learning curves show how the model's performance (training and validation scores) changes with the amount of training data.")
 
   # Confirmation for Learning Curve Plot
+  print("Learning curves show how the model's performance (training and validation scores) changes with the amount of training data.")
   print("\n** Would you like to visualize learning curves? (y/n) **")
+
   while True:
     choice = input().lower()
     if choice in ["y", "n"]:
@@ -121,6 +126,7 @@ def plot_learning_curves(trained_model, train_data, val_data, target_column):
       print("Invalid choice. Please choose 'y' or 'n'.")
 
   if choice == "y":
+    print("\n** Visualizing learning curves...**")
 
     # Extract features and target
     X_train = train_data.drop(target_column, axis=1)
@@ -161,14 +167,14 @@ def plot_roc_curve(trained_model, val_data, target_column):
       val_data (pandas.DataFrame): The DataFrame containing the validation data (features and target).
   """
 
-  print("\n** Visualizing ROC curves (for classification models only)...**")
-  print("ROC curves show the trade-off between true positive rates (TPR) and false positive rates (FPR) at different classification thresholds.")
 
   # Check if the model is a classification model
   if not hasattr(trained_model, "predict_proba"):
     return
 
   # Confirmation for ROC Curve Plot
+  print("ROC curves show the trade-off between true positive rates (TPR) and false positive rates (FPR) at different classification thresholds.")
+
   print("\n** Would you like to visualize ROC curves? (y/n) **")
   while True:
     choice = input().lower()
@@ -178,6 +184,8 @@ def plot_roc_curve(trained_model, val_data, target_column):
       print("Invalid choice. Please choose 'y' or 'n'.")
 
   if choice == "y":
+    print("\n** Visualizing ROC curves (for classification models only)...**")
+
     # Import libraries for plotting (replace with your preferred library)
     try:
       import matplotlib.pyplot as plt
@@ -223,8 +231,6 @@ def plot_precision_recall_curve(trained_model, val_data, target_column):
       val_data (pandas.DataFrame): The DataFrame containing the validation data (features and target).
   """
 
-  print("\n** Visualizing precision-recall curves (for classification models only)...**")
-  print("Precision-recall curves show the trade-off between precision (minimizing false positives) and recall (minimizing false negatives) at different classification thresholds.")
 
   # Check if the model is a classification model
   if not hasattr(trained_model, "predict_proba"):
@@ -232,6 +238,7 @@ def plot_precision_recall_curve(trained_model, val_data, target_column):
     return
 
   # Confirmation for Precision-Recall Curve Plot
+  print("Precision-recall curves show the trade-off between precision (minimizing false positives) and recall (minimizing false negatives) at different classification thresholds.")
   print("\n** Would you like to visualize precision-recall curves? (y/n) **")
   while True:
     choice = input().lower()
@@ -241,6 +248,8 @@ def plot_precision_recall_curve(trained_model, val_data, target_column):
       print("Invalid choice. Please choose 'y' or 'n'.")
 
   if choice == "y":
+    print("\n** Visualizing precision-recall curves (for classification models only)...**")
+
     # Import libraries for plotting (replace with your preferred library)
     try:
       import matplotlib.pyplot as plt
@@ -289,11 +298,11 @@ def explain_with_shap(trained_model, val_data, target_column, explainer_type="fo
     print("\n** SHAP library not found. SHAP explanations are unavailable.**")
     return
 
-  print("\n** Generating SHAP explanations (may take some time)...**")
-  print("SHAP explains how each feature contributes to a model's prediction for a specific data point.")
 
   # Confirmation for SHAP Explanations
   print("\n** Would you like to generate SHAP explanations? (y/n) **")
+  print("SHAP explains how each feature contributes to a model's prediction for a specific data point.")
+
   while True:
     choice = input().lower()
     if choice in ["y", "n"]:
@@ -302,6 +311,8 @@ def explain_with_shap(trained_model, val_data, target_column, explainer_type="fo
       print("Invalid choice. Please choose 'y' or 'n'.")
 
   if choice == "y":
+    print("\n** Generating SHAP explanations (may take some time)...**")
+
     # Extract features and a single data point for explanation (can be modified to explain multiple points)
     X_val = val_data.drop(target_column, axis=1)
     # Choose a data point for explanation (e.g., first row)
@@ -345,10 +356,9 @@ def plot_partial_dependence(trained_model, val_data, target_column,  feature_nam
       feature_names (list, optional): The list of feature names (in the same order as the data). Defaults to None.
   """
 
-  print("\n** Visualizing partial dependence plots (PDPs)...**")
-  print("PDPs show the average effect of a single feature on the model's prediction, marginalizing over other features.")
 
   # Confirmation for PDP Visualization
+  print("PDPs show the average effect of a single feature on the model's prediction, marginalizing over other features.")
   print("\n** Would you like to visualize PDPs? (y/n) **")
   while True:
     choice = input().lower()
@@ -358,6 +368,8 @@ def plot_partial_dependence(trained_model, val_data, target_column,  feature_nam
       print("Invalid choice. Please choose 'y' or 'n'.")
 
   if choice == "y":
+    print("\n** Visualizing partial dependence plots (PDPs)...**")
+
     # Extract features and target
     X_val = val_data.drop(target_column, axis=1)
     y_val = val_data[target_column]
@@ -415,11 +427,11 @@ def analyze_feature_importance(trained_model, val_data, target_column, feature_n
       feature_names (list, optional): The list of feature names (in the same order as the data). Defaults to None.
   """
 
-  print("\n** Analyzing feature importance...**")
-  print("Feature importance helps identify features that have a greater impact on the model's predictions.")
 
   # Confirmation for Feature Importance Analysis
   print("\n** Would you like to analyze feature importance? (y/n) **")
+  print("Feature importance helps identify features that have a greater impact on the model's predictions.")
+
   while True:
     choice = input().lower()
     if choice in ["y", "n"]:
@@ -428,6 +440,7 @@ def analyze_feature_importance(trained_model, val_data, target_column, feature_n
       print("Invalid choice. Please choose 'y' or 'n'.")
 
   if choice == "y":
+    print("\n** Analyzing feature importance...**")
     # Extract features and target
     X_val = val_data.drop(target_column, axis=1)
     y_val = val_data[target_column]
@@ -462,11 +475,11 @@ def save_model(trained_model, save_path):
       save_path (str): The path (including filename) to save the model.
   """
 
-  print("\n** Saving the trained model (optional)...**")
-  print("This allows you to use the trained model for future predictions without retraining.")
 
   # Confirmation for Model Persistence
   print("\n** Would you like to save the trained model? (y/n) **")
+  print("This allows you to use the trained model for future predictions without retraining.")
+
   while True:
     choice = input().lower()
     if choice in ["y", "n"]:
@@ -475,6 +488,8 @@ def save_model(trained_model, save_path):
       print("Invalid choice. Please choose 'y' or 'n'.")
 
   if choice == "y":
+    print("\n** Saving the trained model (optional)...**")
+
     try:
       # Save the model using pickle
       with open(save_path, 'wb') as f:

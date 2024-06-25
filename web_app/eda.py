@@ -26,78 +26,85 @@ def visualize_numerical(data):
     print("No numeric features found in the data.")
     return
 
-  print("Choose a numeric feature to visualize:")
+  print("Numeric features you can visualize:")
   for i, col in enumerate(numeric_cols):
     print(f"  {i+1}. {col}")
 
   while True:
-    feature_choice = input("Enter your choice (1-{} or 'q' to quit): ".format(len(numeric_cols)))
-    if feature_choice.lower() == 'q':
+    print("Would you like to visualize any of the numeric features?")
+    visualization_decision = input("Enter 'y' to continue or 'q' to quit and skip visualizing any numeric features): ".format(len(numeric_cols)))
+    if visualization_decision.lower() == 'q':
       print("Exiting visualization.")
       return  # Exit the function if 'q' is entered
 
-    try:
-      feature_choice = int(input("Enter your choice (1-{} or 'q' to quit): ".format(len(numeric_cols))))
-      if 1 <= feature_choice <= len(numeric_cols):
-        col = numeric_cols[feature_choice - 1]
-        print("Choose a visualization type:")
-        print("  1. Histogram (shows the distribution of the data)")
-        print("  2. Box Plot (shows quartiles and potential outliers)")
-        print("  3. Scatter Plot (choose another numeric feature to explore relationships)")
-        print("  4. Violin Plot (shows the distribution of the data with a hint of skewness)")
-        print("  5. Kernel Density Plot (shows the probability density of the data)")
-        print("  'q' to quit")
 
-        viz_choice = input("Enter your choice (1-5 or 'q'): ")
-        if viz_choice.lower() == 'q':
-          print("Exiting visualization.")
-          return
-        else:
-          try:
-            viz_choice = int(viz_choice)
-            if 1 <= viz_choice <= 5:
-              if viz_choice == 1:
-                data[col].hist()
-                plt.xlabel(col)
-                plt.ylabel("Number of observations")
-                plt.title(f"Distribution of {col}")
-                plt.show()
-              elif viz_choice == 2:
-                data.boxplot(column=col)
-                plt.xlabel(col)
-                plt.ylabel("Value")
-                plt.title(f"Box Plot of {col}")
-                plt.show()
-              elif viz_choice == 3:
-                other_col = choose_another_numeric_feature(data, col)
-                if other_col:
-                  data.plot.scatter(x=col, y=other_col)
+    elif visualization_decision.lower() == 'y':
+      try:
+        feature_choice = input("Enter your choice (1-{} or 'q' to quit): ").format(len(numeric_cols))
+        if 1 <= feature_choice <= len(numeric_cols):
+          col = numeric_cols[feature_choice - 1]
+          print("Choose a visualization type:")
+          print("  1. Histogram (shows the distribution of the data)")
+          print("  2. Box Plot (shows quartiles and potential outliers)")
+          print("  3. Scatter Plot (choose another numeric feature to explore relationships)")
+          print("  4. Violin Plot (shows the distribution of the data with a hint of skewness)")
+          print("  5. Kernel Density Plot (shows the probability density of the data)")
+          print("  'q' to quit")
+
+          viz_choice = input("Enter your choice (1-5 or 'q'): ")
+          if viz_choice.lower() == 'q':
+            print("Exiting visualization.")
+            return
+          else:
+            try:
+              viz_choice = int(viz_choice)
+              if 1 <= viz_choice <= 5:
+                print("Exit out of the visualization to continue with this program.")
+
+                if viz_choice == 1:
+                  data[col].hist()
                   plt.xlabel(col)
-                  plt.ylabel(other_col)
-                  plt.title(f"Scatter Plot of {col} vs {other_col}")
+                  plt.ylabel("Number of observations")
+                  plt.title(f"Distribution of {col}")
                   plt.show()
-              elif viz_choice == 4:
-                data[col].plot(kind="violin")
-                plt.xlabel(col)
-                plt.ylabel("Density")
-                plt.title(f"Violin Plot of {col}")
-                plt.show()
-              elif viz_choice == 5:
-                data[col].plot(kind="density")
-                plt.xlabel(col)
-                plt.ylabel("Density")
-                plt.title(f"Kernel Density Plot of {col}")
-                plt.show()
+                elif viz_choice == 2:
+                  data.boxplot(column=col)
+                  plt.xlabel(col)
+                  plt.ylabel("Value")
+                  plt.title(f"Box Plot of {col}")
+                  plt.show()
+                elif viz_choice == 3:
+                  other_col = choose_another_numeric_feature(data, col)
+                  if other_col:
+                    data.plot.scatter(x=col, y=other_col)
+                    plt.xlabel(col)
+                    plt.ylabel(other_col)
+                    plt.title(f"Scatter Plot of {col} vs {other_col}")
+                    plt.show()
+                elif viz_choice == 4:
+                  data[col].plot(kind="violin")
+                  plt.xlabel(col)
+                  plt.ylabel("Density")
+                  plt.title(f"Violin Plot of {col}")
+                  plt.show()
+                elif viz_choice == 5:
+                  data[col].plot(kind="density")
+                  plt.xlabel(col)
+                  plt.ylabel("Density")
+                  plt.title(f"Kernel Density Plot of {col}")
+                  plt.show()
+                else:
+                  print("Invalid visualization choice.")
               else:
-                print("Invalid visualization choice.")
-            else:
-              print("Invalid visualization choice. Please choose between 1 and 5.")
-          except ValueError:
-            print("Invalid input. Please enter a number.")
-      else:
-        print("Invalid choice. Please enter a number between 1 and {} or 'q' to quit.".format(len(numeric_cols)))
-    except:
-      pass  # Placeholder to avoid needing a specific exception type
+                print("Invalid visualization choice. Please choose between 1 and 5.")
+            except ValueError:
+              print("Invalid input. Please enter a number.")
+        else:
+          print("Invalid choice. Please enter a number between 1 and {} or 'q' to quit.".format(len(numeric_cols)))
+      except:
+        pass  # Placeholder to avoid needing a specific exception type
+    else:
+      print("Invalid choice, please enter 'y' to continue, or 'y' to quit.")
 
 
 def choose_another_numeric_feature(data, current_col):
@@ -149,66 +156,71 @@ def visualize_categorical(data):
     print("No categorical features found in the data.")
     return
 
-  print("Choose a categorical feature to visualize:")
+  print("Categorical features you can visualize:")
   for i, col in enumerate(categorical_cols):
     print(f"  {i+1}. {col}")
 
   while True:
-    feature_choice = input("Enter your choice (1-{} or 'q' to quit): ".format(len(categorical_cols)))
-    if feature_choice.lower() == 'q':
+    print("Would you like to visualize any of the categorical features?")
+    visualization_decision = input("Enter 'y' to continue or 'q' to quit and skip visualizing any numeric features): ".format(len(categorical_cols)))
+    if visualization_decision.lower() == 'q':
       print("Exiting visualization.")
       return  # Exit the function if 'q' is entered
-    try:
-      feature_choice = int(input("Enter your choice (1-{} or 'q' to quit): ".format(len(categorical_cols))))
-      if 1 <= feature_choice <= len(categorical_cols):
-        col = categorical_cols[feature_choice - 1]
-        print("Choose a visualization type:")
-        print("  1. Value Counts (shows the number of observations in each category)")  
-        print("  2. Bar Chart (shows the number of observations in each category)")  
-        print("  3. Pie Chart (shows the proportion of each category as pie slices, useful for few categories)")  
-        print("  4. Histogram (shows the frequency distribution of categories)")  
-        print("  'q' to quit")
+    elif visualization_decision.lower() == 'y':
+      try:
+        feature_choice = input("Enter your choice (1-{} or 'q' to quit): ").format(len(categorical_cols))
+        if 1 <= feature_choice <= len(categorical_cols):
+          col = categorical_cols[feature_choice - 1]
+          print("Choose a visualization type:")
+          print("  1. Value Counts (shows the number of observations in each category)")  
+          print("  2. Bar Chart (shows the number of observations in each category)")  
+          print("  3. Pie Chart (shows the proportion of each category as pie slices, useful for few categories)")  
+          print("  4. Histogram (shows the frequency distribution of categories)")  
+          print("  'q' to quit")
 
-        viz_choice = input("Enter your choice (1-4 or 'q'): ")
-        if viz_choice.lower() == 'q':
-          print("Exiting visualization.")
-          return
-        else:
-          try:
-            viz_choice = int(viz_choice)
-            if 1 <= viz_choice <= 4:
-              if viz_choice == 1:
-                data[col].value_counts().plot(kind="bar")
-                plt.xlabel(col)
-                plt.ylabel("Number of observations")
-                plt.title(f"Value Counts of {col}")
-                plt.show()
-              elif viz_choice == 2:
-                data[col].value_counts().plot(kind="bar")
-                plt.xlabel(col)
-                plt.ylabel("Number of observations")
-                plt.title(f"Bar Chart of {col}")
-                plt.show()
-              elif viz_choice == 3:
-                data[col].value_counts().plot(kind="pie", autopct="%1.1f%%")
-                plt.title(f"Pie Chart of {col}")
-                plt.show()
-              elif viz_choice == 4:
-                data[col].value_counts().plot(kind="hist")
-                plt.xlabel(col)
-                plt.ylabel("Number of observations")
-                plt.title(f"Histogram of {col}")
-                plt.show()
+          viz_choice = input("Enter your choice (1-4 or 'q'): ")
+          if viz_choice.lower() == 'q':
+            print("Exiting visualization.")
+            return
+          else:
+            try:
+              viz_choice = int(viz_choice)
+              if 1 <= viz_choice <= 4:
+                print("Exit out of the visualization to continue with this program.")
+                if viz_choice == 1:
+                  data[col].value_counts().plot(kind="bar")
+                  plt.xlabel(col)
+                  plt.ylabel("Number of observations")
+                  plt.title(f"Value Counts of {col}")
+                  plt.show()
+                elif viz_choice == 2:
+                  data[col].value_counts().plot(kind="bar")
+                  plt.xlabel(col)
+                  plt.ylabel("Number of observations")
+                  plt.title(f"Bar Chart of {col}")
+                  plt.show()
+                elif viz_choice == 3:
+                  data[col].value_counts().plot(kind="pie", autopct="%1.1f%%")
+                  plt.title(f"Pie Chart of {col}")
+                  plt.show()
+                elif viz_choice == 4:
+                  data[col].value_counts().plot(kind="hist")
+                  plt.xlabel(col)
+                  plt.ylabel("Number of observations")
+                  plt.title(f"Histogram of {col}")
+                  plt.show()
+                else:
+                  print("Invalid visualization choice.")
               else:
-                print("Invalid visualization choice.")
-            else:
-              print("Invalid visualization choice. Please choose between 1 and 4.")
-          except ValueError:
-            print("Invalid input. Please enter a number.")
-      else:
-        print("Invalid choice. Please enter a number between 1 and {} or 'q' to quit.".format(len(categorical_cols)))
-    except:
-      pass  # Placeholder to avoid needing a specific exception type
+                print("Invalid visualization choice. Please choose between 1 and 4.")
+            except ValueError:
+              print("Invalid input. Please enter a number.")
+        else:
+          print("Invalid choice. Please enter a number between 1 and {} or 'q' to quit.".format(len(categorical_cols)))
+      except:
+        pass  # Placeholder to avoid needing a specific exception type
+    else:
+      print("Invalid choice, please enter 'y' to continue, or 'y' to quit.")
 
 
 ########################################################################################
