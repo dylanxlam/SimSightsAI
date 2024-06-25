@@ -46,29 +46,28 @@ def main():
     feature_selection(preprocessed_data, target_column)
 
     # Modeling
-    chosen_model = model_selection(preprocessed_data, target_column)
-    train_data, val_data, test_data = data_splitting(preprocessed_data, target_column, test_size=0.2, random_state=42)
-    trained_model = train_model(chosen_model, train_data, val_data, test_data, target_column, hyperparameter_options=None)
+    train_data, val_data, test_data = data_splitting(preprocessed_data, target_column)
+    chosen_model, train_data, val_data, test_data = model_selection(train_data, val_data, test_data, target_column)
     hyperparameter_grid = {
     'C': [0.001, 0.01, 0.1, 1, 10],
-    'solver': ['liblinear', 'lbfgs', 'sag']  # Example hyperparameters for LogisticRegression
+    'solver': ['liblinear', 'lbfgs', 'sag'],
+    'max_iter': [2000]  # Example hyperparameters for LogisticRegression
     }
     model_class = chosen_model.__class__ 
     best_model = tune_hyperparameters(model_class, train_data, val_data, test_data, target_column, hyperparameter_grid)
     trained_model = train_model(best_model, train_data, val_data, test_data, target_column)
 
-    evaluate_model(trained_model, train_data, val_data, test_data, target_column)
     metric_value, predictions = evaluate_model(trained_model, train_data, val_data, test_data, target_column)
 
     # Model Analysis
     generate_classification_report(trained_model, val_data, predictions, target_column)
-    visualize_confusion_matrix(trained_model, val_data)
-    plot_learning_curves(trained_model, train_data, val_data)
-    plot_roc_curve(trained_model, val_data)
-    plot_precision_recall_curve(trained_model, val_data)
-    explain_with_shap(trained_model, val_data, explainer_type="force_plot")
-    plot_partial_dependence(trained_model, val_data, feature_names=None)
-    analyze_feature_importance(trained_model, val_data, feature_names=None)
+    visualize_confusion_matrix(trained_model, val_data, predictions, target_column)
+    plot_learning_curves(trained_model, train_data, val_data, target_column)
+    plot_roc_curve(trained_model, val_data, target_column)
+    plot_precision_recall_curve(trained_model, val_data, target_column)
+    explain_with_shap(trained_model, val_data, target_column, explainer_type="force_plot")
+    plot_partial_dependence(trained_model, val_data, target_column, feature_names=None)
+    analyze_feature_importance(trained_model, val_data, target_column, feature_names=None)
     save_path = input("Enter the path (including filename) to save the model:")
     save_model(trained_model, save_path)
 

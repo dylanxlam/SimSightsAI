@@ -41,10 +41,13 @@ def generate_classification_report(trained_model, val_data, predictions, target_
   report = classification_report(val_data[target_column], predictions, output_dict=True)
   print("\n** Classification Report:**")
   for class_name, metrics in report.items():
-    print(f"\n** Class: {class_name} **")
-    for metric_name, value in metrics.items(): 
-      print(f"  - {metric_name}: {value:.4f}")  # Format metric values
-
+    if isinstance(metrics, dict):
+      print(f"\n** Class: {class_name} **")
+      for metric_name, value in metrics.items(): 
+        print(f"  - {metric_name}: {value:.4f}")  # Format metric values
+    else:
+      # Handle the 'accuracy' metric separately
+      print(f"\n** Overall Accuracy: {metrics:.4f} **")
 
   return report  # Optional: Return the report dictionary (if generated)
 
@@ -52,7 +55,7 @@ def generate_classification_report(trained_model, val_data, predictions, target_
 ########################################################################################
 # Confusion Matrices
 ########################################################################################
-def visualize_confusion_matrix(trained_model, val_data):
+def visualize_confusion_matrix(trained_model, val_data, predictions, target_column):
   """
   Guides the user through generating and visualizing a confusion matrix for the trained model on the validation data.
 
@@ -64,8 +67,6 @@ def visualize_confusion_matrix(trained_model, val_data):
   print("\n** Visualizing the confusion matrix...**")
   print("This helps us understand how often the model correctly classified each class and where it made mistakes.")
 
-  # Make predictions on the validation data
-  predictions = trained_model.predict(val_data.drop("target", axis=1))
 
   # Confirmation for Confusion Matrix Visualization
   print("\n** Would you like to visualize the confusion matrix? (y/n) **")
@@ -80,11 +81,11 @@ def visualize_confusion_matrix(trained_model, val_data):
     # Generate and display the confusion matrix (using library like seaborn)
     try:
       import seaborn as sns  # Import seaborn for visualization (optional)
-      sns.heatmap(confusion_matrix(val_data["target"], predictions), annot=True, fmt="d")  # Annotate and format
+      sns.heatmap(confusion_matrix(val_data[target_column], predictions), annot=True, fmt="d")  # Annotate and format
       plt.show()  # Display the heatmap
     except ModuleNotFoundError:
       print("\n** seaborn library not found for visualization. Confusion matrix values:")
-      print(confusion_matrix(val_data["target"], predictions))
+      print(confusion_matrix(val_data[target_column], predictions))
     except Exception as e:
       print(f"\n** Error occurred while visualizing the confusion matrix: {e}")
     else:
@@ -97,7 +98,7 @@ def visualize_confusion_matrix(trained_model, val_data):
 ########################################################################################
 # Learning Curves
 ########################################################################################   
-def plot_learning_curves(trained_model, train_data, val_data):
+def plot_learning_curves(trained_model, train_data, val_data, target_column):
   """
   Guides the user through plotting learning curves for the trained model.
 
@@ -122,10 +123,10 @@ def plot_learning_curves(trained_model, train_data, val_data):
   if choice == "y":
 
     # Extract features and target
-    X_train = train_data.drop("target", axis=1)
-    y_train = train_data["target"]
-    X_val = val_data.drop("target", axis=1)
-    y_val = val_data["target"]
+    X_train = train_data.drop(target_column, axis=1)
+    y_train = train_data[target_column]
+    X_val = val_data.drop(target_column, axis=1)
+    y_val = val_data[target_column]
 
     # Define model class (assuming you have the class definition)
     model_class = trained_model.__class__  # Get the class of the trained model
@@ -151,7 +152,7 @@ def plot_learning_curves(trained_model, train_data, val_data):
 ########################################################################################
 # ROC Curves (for Classification)
 ########################################################################################
-def plot_roc_curve(trained_model, val_data):
+def plot_roc_curve(trained_model, val_data, target_column):
   """
   Guides the user through plotting ROC curves for the trained classification model.
 
@@ -185,8 +186,8 @@ def plot_roc_curve(trained_model, val_data):
       return
 
     # Extract features and target
-    X_val = val_data.drop("target", axis=1)
-    y_val = val_data["target"]
+    X_val = val_data.drop(target_column, axis=1)
+    y_val = val_data[target_column]
 
     # Predict probabilities
     y_pred_proba = trained_model.predict_proba(X_val)[:, 1]  # Assuming positive class probability
@@ -213,7 +214,7 @@ def plot_roc_curve(trained_model, val_data):
 ########################################################################################
 # Precision-Recall Curves (for Classification)
 ########################################################################################
-def plot_precision_recall_curve(trained_model, val_data):
+def plot_precision_recall_curve(trained_model, val_data, target_column):
   """
   Guides the user through plotting precision-recall curves for the trained classification model.
 
@@ -248,8 +249,8 @@ def plot_precision_recall_curve(trained_model, val_data):
       return
 
     # Extract features and target
-    X_val = val_data.drop("target", axis=1)
-    y_val = val_data["target"]
+    X_val = val_data.drop(target_column, axis=1)
+    y_val = val_data[target_column]
 
     # Predict probabilities
     y_pred_proba = trained_model.predict_proba(X_val)[:, 1]  # Assuming positive class probability
@@ -274,7 +275,7 @@ def plot_precision_recall_curve(trained_model, val_data):
 ########################################################################################
 # SHAP Explanations
 ########################################################################################
-def explain_with_shap(trained_model, val_data, explainer_type="force_plot"):
+def explain_with_shap(trained_model, val_data, target_column, explainer_type="force_plot"):
   """
   Guides the user through generating SHAP explanations for the trained model (if shap library is available).
 
@@ -302,7 +303,7 @@ def explain_with_shap(trained_model, val_data, explainer_type="force_plot"):
 
   if choice == "y":
     # Extract features and a single data point for explanation (can be modified to explain multiple points)
-    X_val = val_data.drop("target", axis=1)
+    X_val = val_data.drop(target_column, axis=1)
     # Choose a data point for explanation (e.g., first row)
     instance = X_val.iloc[0].values.reshape(1, -1)  # Reshape for single instance
 
@@ -334,7 +335,7 @@ def explain_with_shap(trained_model, val_data, explainer_type="force_plot"):
 ########################################################################################
 # Partial Dependence Plots (PDPs)
 ########################################################################################
-def plot_partial_dependence(trained_model, val_data, feature_names=None):
+def plot_partial_dependence(trained_model, val_data, target_column,  feature_names=None):
   """
   Guides the user through generating and visualizing partial dependence plots (PDPs) for the trained model.
 
@@ -358,8 +359,8 @@ def plot_partial_dependence(trained_model, val_data, feature_names=None):
 
   if choice == "y":
     # Extract features and target
-    X_val = val_data.drop("target", axis=1)
-    y_val = val_data["target"]
+    X_val = val_data.drop(target_column, axis=1)
+    y_val = val_data[target_column]
 
     # Get feature names if not provided
     if feature_names is None:
@@ -404,7 +405,7 @@ def plot_partial_dependence(trained_model, val_data, feature_names=None):
 ########################################################################################
 # Feature Importance Analysis
 ########################################################################################
-def analyze_feature_importance(trained_model, val_data, feature_names=None):
+def analyze_feature_importance(trained_model, val_data, target_column, feature_names=None):
   """
   Guides the user through analyzing feature importance for the trained model.
 
@@ -428,8 +429,8 @@ def analyze_feature_importance(trained_model, val_data, feature_names=None):
 
   if choice == "y":
     # Extract features and target
-    X_val = val_data.drop("target", axis=1)
-    y_val = val_data["target"]
+    X_val = val_data.drop(target_column, axis=1)
+    y_val = val_data[target_column]
 
     # Get feature names if not provided
     if feature_names is None:
