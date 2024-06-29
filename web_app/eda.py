@@ -3,6 +3,7 @@
 ########################################################################################
 import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 from scipy.stats import chi2_contingency
 import numpy as np
 
@@ -14,214 +15,145 @@ import numpy as np
 ########################################################################################
 # Data Distribution Visualization
 ########################################################################################
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
 def visualize_numerical(data):
   """
-  Prompts the user to choose a numeric feature and a visualization type.
+  Guides the user through visualizing numerical features.
 
   Args:
       data (pandas.DataFrame): The DataFrame containing the data.
   """
-  numeric_cols = [col for col in data.columns if pd.api.types.is_numeric_dtype(data[col])]
+  numeric_cols = data.select_dtypes(include=['number']).columns.tolist()
+  
   if not numeric_cols:
     print("No numeric features found in the data.")
     return
 
-  print("Numeric features you can visualize:")
-  for i, col in enumerate(numeric_cols):
-    print(f"  {i+1}. {col}")
-
   while True:
-    print("Would you like to visualize any of the numeric features?")
-    visualization_decision = input("Enter 'y' to continue or 'q' to quit and skip visualizing any numeric features): ".format(len(numeric_cols)))
-    if visualization_decision.lower() == 'q':
-      print("Exiting visualization.")
-      return  # Exit the function if 'q' is entered
+    print("\nNumeric features you can visualize:")
+    for i, col in enumerate(numeric_cols, 1):
+      print(f"  {i}. {col}")
+    print("  q. Quit")
 
-
-    elif visualization_decision.lower() == 'y':
-      try:
-        feature_choice = input("Enter your choice (1-{} or 'q' to quit): ").format(len(numeric_cols))
-        if 1 <= feature_choice <= len(numeric_cols):
-          col = numeric_cols[feature_choice - 1]
-          print("Choose a visualization type:")
-          print("  1. Histogram (shows the distribution of the data)")
-          print("  2. Box Plot (shows quartiles and potential outliers)")
-          print("  3. Scatter Plot (choose another numeric feature to explore relationships)")
-          print("  4. Violin Plot (shows the distribution of the data with a hint of skewness)")
-          print("  5. Kernel Density Plot (shows the probability density of the data)")
-          print("  'q' to quit")
-
-          viz_choice = input("Enter your choice (1-5 or 'q'): ")
-          if viz_choice.lower() == 'q':
-            print("Exiting visualization.")
-            return
-          else:
-            try:
-              viz_choice = int(viz_choice)
-              if 1 <= viz_choice <= 5:
-                print("Exit out of the visualization to continue with this program.")
-
-                if viz_choice == 1:
-                  data[col].hist()
-                  plt.xlabel(col)
-                  plt.ylabel("Number of observations")
-                  plt.title(f"Distribution of {col}")
-                  plt.show()
-                elif viz_choice == 2:
-                  data.boxplot(column=col)
-                  plt.xlabel(col)
-                  plt.ylabel("Value")
-                  plt.title(f"Box Plot of {col}")
-                  plt.show()
-                elif viz_choice == 3:
-                  other_col = choose_another_numeric_feature(data, col)
-                  if other_col:
-                    data.plot.scatter(x=col, y=other_col)
-                    plt.xlabel(col)
-                    plt.ylabel(other_col)
-                    plt.title(f"Scatter Plot of {col} vs {other_col}")
-                    plt.show()
-                elif viz_choice == 4:
-                  data[col].plot(kind="violin")
-                  plt.xlabel(col)
-                  plt.ylabel("Density")
-                  plt.title(f"Violin Plot of {col}")
-                  plt.show()
-                elif viz_choice == 5:
-                  data[col].plot(kind="density")
-                  plt.xlabel(col)
-                  plt.ylabel("Density")
-                  plt.title(f"Kernel Density Plot of {col}")
-                  plt.show()
-                else:
-                  print("Invalid visualization choice.")
-              else:
-                print("Invalid visualization choice. Please choose between 1 and 5.")
-            except ValueError:
-              print("Invalid input. Please enter a number.")
-        else:
-          print("Invalid choice. Please enter a number between 1 and {} or 'q' to quit.".format(len(numeric_cols)))
-      except:
-        pass  # Placeholder to avoid needing a specific exception type
-    else:
-      print("Invalid choice, please enter 'y' to continue, or 'y' to quit.")
-
-
-def choose_another_numeric_feature(data, current_col):
-  """
-  Prompts the user to choose another numeric feature for a scatter plot.
-
-  Args:
-      data (pandas.DataFrame): The DataFrame containing the data.
-      current_col (str): The name of the already chosen numeric feature.
-
-  Returns:
-      str: The name of the chosen numeric feature (excluding the current one), 
-          or None if the user cancels.
-  """
-  remaining_numeric_cols = [col for col in data.columns 
-                             if pd.api.types.is_numeric_dtype(data[col]) and col != current_col]
-  if not remaining_numeric_cols:
-    print(f"No other numeric features available besides {current_col}.")
-    return None
-
-  print(f"Choose another numeric feature to create a scatter plot with {current_col}:")
-  for i, col in enumerate(remaining_numeric_cols):
-    print(f"  {i+1}. {col}")
-
-  while True:
+    choice = input("Enter your choice (number or 'q' to quit): ").lower()
+    
+    if choice == 'q':
+      break
+    
     try:
-      other_choice = int(input("Enter your choice (1-{} or 'q' to quit): ".format(len(remaining_numeric_cols))))
-      if 1 <= other_choice <= len(remaining_numeric_cols):
-        return remaining_numeric_cols[other_choice - 1]
-      elif other_choice.lower() == 'q':
-        print("Scatter plot canceled.")
-        return None
+      col_index = int(choice) - 1
+      if 0 <= col_index < len(numeric_cols):
+        col = numeric_cols[col_index]
+        visualize_feature(data, col, is_numeric=True)
       else:
-        print("Invalid choice. Please enter a number between 1 and {} or 'q' to quit.".format(len(remaining_numeric_cols)))
+        print("Invalid choice. Please try again.")
     except ValueError:
-      print("Invalid input. Please enter a number.")
-
+      print("Invalid input. Please enter a number or 'q'.")
 
 def visualize_categorical(data):
   """
-  Prompts the user to choose a categorical feature and a visualization type.
+  Guides the user through visualizing categorical features.
 
   Args:
       data (pandas.DataFrame): The DataFrame containing the data.
   """
-  categorical_cols = [col for col in data.columns if not pd.api.types.is_numeric_dtype(data[col])]
-
+  categorical_cols = data.select_dtypes(include=['object', 'category']).columns.tolist()
+  
   if not categorical_cols:
     print("No categorical features found in the data.")
     return
 
-  print("Categorical features you can visualize:")
-  for i, col in enumerate(categorical_cols):
-    print(f"  {i+1}. {col}")
-
   while True:
-    print("Would you like to visualize any of the categorical features?")
-    visualization_decision = input("Enter 'y' to continue or 'q' to quit and skip visualizing any numeric features): ".format(len(categorical_cols)))
-    if visualization_decision.lower() == 'q':
-      print("Exiting visualization.")
-      return  # Exit the function if 'q' is entered
-    elif visualization_decision.lower() == 'y':
-      try:
-        feature_choice = input("Enter your choice (1-{} or 'q' to quit): ").format(len(categorical_cols))
-        if 1 <= feature_choice <= len(categorical_cols):
-          col = categorical_cols[feature_choice - 1]
-          print("Choose a visualization type:")
-          print("  1. Value Counts (shows the number of observations in each category)")  
-          print("  2. Bar Chart (shows the number of observations in each category)")  
-          print("  3. Pie Chart (shows the proportion of each category as pie slices, useful for few categories)")  
-          print("  4. Histogram (shows the frequency distribution of categories)")  
-          print("  'q' to quit")
+    print("\nCategorical features you can visualize:")
+    for i, col in enumerate(categorical_cols, 1):
+      print(f"  {i}. {col}")
+    print("  q. Quit")
 
-          viz_choice = input("Enter your choice (1-4 or 'q'): ")
-          if viz_choice.lower() == 'q':
-            print("Exiting visualization.")
-            return
-          else:
-            try:
-              viz_choice = int(viz_choice)
-              if 1 <= viz_choice <= 4:
-                print("Exit out of the visualization to continue with this program.")
-                if viz_choice == 1:
-                  data[col].value_counts().plot(kind="bar")
-                  plt.xlabel(col)
-                  plt.ylabel("Number of observations")
-                  plt.title(f"Value Counts of {col}")
-                  plt.show()
-                elif viz_choice == 2:
-                  data[col].value_counts().plot(kind="bar")
-                  plt.xlabel(col)
-                  plt.ylabel("Number of observations")
-                  plt.title(f"Bar Chart of {col}")
-                  plt.show()
-                elif viz_choice == 3:
-                  data[col].value_counts().plot(kind="pie", autopct="%1.1f%%")
-                  plt.title(f"Pie Chart of {col}")
-                  plt.show()
-                elif viz_choice == 4:
-                  data[col].value_counts().plot(kind="hist")
-                  plt.xlabel(col)
-                  plt.ylabel("Number of observations")
-                  plt.title(f"Histogram of {col}")
-                  plt.show()
-                else:
-                  print("Invalid visualization choice.")
-              else:
-                print("Invalid visualization choice. Please choose between 1 and 4.")
-            except ValueError:
-              print("Invalid input. Please enter a number.")
-        else:
-          print("Invalid choice. Please enter a number between 1 and {} or 'q' to quit.".format(len(categorical_cols)))
-      except:
-        pass  # Placeholder to avoid needing a specific exception type
+    choice = input("Enter your choice (number or 'q' to quit): ").lower()
+    
+    if choice == 'q':
+      break
+    
+    try:
+      col_index = int(choice) - 1
+      if 0 <= col_index < len(categorical_cols):
+        col = categorical_cols[col_index]
+        visualize_feature(data, col, is_numeric=False)
+      else:
+        print("Invalid choice. Please try again.")
+    except ValueError:
+      print("Invalid input. Please enter a number or 'q'.")
+
+def visualize_feature(data, col, is_numeric):
+  """
+  Visualizes a single feature based on user's choice of plot type.
+
+  Args:
+      data (pandas.DataFrame): The DataFrame containing the data.
+      col (str): The name of the column to visualize.
+      is_numeric (bool): Whether the feature is numeric or categorical.
+  """
+  while True:
+    print(f"\nChoose a visualization type for {col}:")
+    if is_numeric:
+      print("  1. Histogram")
+      print("  2. Box Plot")
+      print("  3. Violin Plot")
+      print("  4. Kernel Density Plot")
     else:
-      print("Invalid choice, please enter 'y' to continue, or 'y' to quit.")
+      print("  1. Bar Plot")
+      print("  2. Count Plot")
+      print("  3. Pie Chart")
+    print("  q. Back to feature selection")
 
+    choice = input("Enter your choice: ").lower()
+
+    if choice == 'q':
+      break
+
+    try:
+      choice = int(choice)
+      plt.figure(figsize=(10, 6))
+      
+      if is_numeric:
+        print("Close the plot window to continue with this program.")
+        if choice == 1:
+          sns.histplot(data=data, x=col, kde=True)
+          plt.title(f"Histogram of {col}")
+        elif choice == 2:
+          sns.boxplot(data=data, y=col)
+          plt.title(f"Box Plot of {col}")
+        elif choice == 3:
+          sns.violinplot(data=data, y=col)
+          plt.title(f"Violin Plot of {col}")
+        elif choice == 4:
+          sns.kdeplot(data=data[col])
+          plt.title(f"Kernel Density Plot of {col}")
+        else:
+          print("Invalid choice. Please try again.")
+          continue
+      else:
+        if choice == 1:
+          print("Close the plot window to continue with this program.")
+          sns.barplot(data=data, x=col, y=data[col].value_counts().index, orient='h')
+          plt.title(f"Bar Plot of {col}")
+        elif choice == 2:
+          sns.countplot(data=data, y=col)
+          plt.title(f"Count Plot of {col}")
+        elif choice == 3:
+          data[col].value_counts().plot(kind='pie', autopct='%1.1f%%')
+          plt.title(f"Pie Chart of {col}")
+        else:
+          print("Invalid choice. Please try again.")
+          continue
+
+      plt.tight_layout()
+      plt.show()
+    except ValueError:
+      print("Invalid input. Please enter a number or 'q'.")
 
 ########################################################################################
 # Correlation Analysis

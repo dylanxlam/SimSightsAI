@@ -70,7 +70,12 @@ def main():
     explain_with_shap(trained_model, val_data, target_column, explainer_type="force_plot")
     plot_partial_dependence(trained_model, val_data, target_column, feature_names=None)
     analyze_feature_importance(trained_model, val_data, target_column, feature_names=None)
-    save_path = input("Enter the path (including filename) to save the model:")
+    print("Enter the path (including filename) to save the model: ")
+    print("\nFor example:")
+    print("* On Windows: C:\\Users\\Username\\Documents\\my_model.pkl")
+    print("* On macOS/Linux: /Users/Username/Documents/my_model.pkl")
+    save_path = input()
+
     save_model(trained_model, save_path)
 
 if __name__ == "__main__":

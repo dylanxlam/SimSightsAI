@@ -80,12 +80,11 @@ def visualize_confusion_matrix(trained_model, val_data, predictions, target_colu
   if choice == "y":
     # Generate and display the confusion matrix (using library like seaborn)
     print("\n** Visualizing the confusion matrix...**")
-    print("Exit out of the visualization to continue with this program.")
 
     try:
       import seaborn as sns  # Import seaborn for visualization (optional)
       import matplotlib.pyplot as plt  # Explicitly import matplotlib for plt.show()
-
+      print("Close the plot window to continue with this program.")
       sns.heatmap(confusion_matrix(val_data[target_column], predictions), annot=True, fmt="d")  # Annotate and format
       plt.show()  # Display the heatmap
     except ModuleNotFoundError:
@@ -103,6 +102,9 @@ def visualize_confusion_matrix(trained_model, val_data, predictions, target_colu
 ########################################################################################
 # Learning Curves
 ########################################################################################   
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+
 def plot_learning_curves(trained_model, train_data, val_data, target_column):
   """
   Guides the user through plotting learning curves for the trained model.
@@ -111,13 +113,11 @@ def plot_learning_curves(trained_model, train_data, val_data, target_column):
       trained_model (object): The trained classification or regression model.
       train_data (pandas.DataFrame): The DataFrame containing the training data (features and target).
       val_data (pandas.DataFrame): The DataFrame containing the validation data (features and target).
+      target_column (str): The name of the target column.
   """
-
-
-  # Confirmation for Learning Curve Plot
-  print("Learning curves show how the model's performance (training and validation scores) changes with the amount of training data.")
+  print("Learning curves show how the model's performance changes with the amount of training data.")
   print("\n** Would you like to visualize learning curves? (y/n) **")
-
+  
   while True:
     choice = input().lower()
     if choice in ["y", "n"]:
@@ -127,37 +127,70 @@ def plot_learning_curves(trained_model, train_data, val_data, target_column):
 
   if choice == "y":
     print("\n** Visualizing learning curves...**")
-
+    
     # Extract features and target
-    X_train = train_data.drop(target_column, axis=1)
-    y_train = train_data[target_column]
-    X_val = val_data.drop(target_column, axis=1)
-    y_val = val_data[target_column]
+    X = train_data.drop(target_column, axis=1)
+    y = train_data[target_column]
 
-    # Define model class (assuming you have the class definition)
-    model_class = trained_model.__class__  # Get the class of the trained model
+    # Define train sizes
+    train_sizes = np.linspace(0.1, 1.0, 10)
 
-    # Define train_sizes for the curve
-    train_sizes, train_scores, val_scores = learning_curve(model_class(), X_train, y_train, cv=5, scoring="accuracy")  # Replace 'accuracy' with relevant metric
+    # Choose appropriate scoring metric
+    if isinstance(trained_model, (LogisticRegression, RandomForestClassifier)):
+      scoring = "accuracy"
+    else:  # Assuming it's a regression model
+      scoring = "neg_mean_squared_error"
 
-    # Plot the learning curve
-    plt.figure()
-    plt.plot(train_sizes, train_scores.mean(axis=1), label="Training Score")
-    plt.plot(train_sizes, val_scores.mean(axis=1), label="Validation Score")
+    # Compute learning curve
+    try:
+      train_sizes, train_scores, val_scores = learning_curve(
+        trained_model, X, y, 
+        train_sizes=train_sizes, 
+        cv=5, 
+        scoring=scoring,
+        n_jobs=-1,
+        verbose=0
+      )
+    except Exception as e:
+      print(f"An error occurred while computing the learning curve: {str(e)}")
+      print("Unable to plot learning curves.")
+      return
+
+    # Compute mean and standard deviation
+    train_mean = np.mean(train_scores, axis=1)
+    train_std = np.std(train_scores, axis=1)
+    val_mean = np.mean(val_scores, axis=1)
+    val_std = np.std(val_scores, axis=1)
+
+    # Plot learning curve
+    print("Close the plot window to continue with this program.")
+    plt.figure(figsize=(10, 6))
+    plt.plot(train_sizes, train_mean, 'o-', color="r", label="Training score")
+    plt.plot(train_sizes, val_mean, 'o-', color="g", label="Cross-validation score")
+    
+    # Plot standard deviation bands
+    plt.fill_between(train_sizes, train_mean - train_std, train_mean + train_std, alpha=0.1, color="r")
+    plt.fill_between(train_sizes, val_mean - val_std, val_mean + val_std, alpha=0.1, color="g")
+    
+    plt.xlabel("Training examples")
     plt.ylabel("Score")
-    plt.xlabel("Training Set Size")
     plt.title("Learning Curves")
-    plt.legend()
+    plt.legend(loc="best")
     plt.grid(True)
+    
     plt.show()
-
   else:
     print("\n** Skipping learning curves visualization.**")
-
 
 ########################################################################################
 # ROC Curves (for Classification)
 ########################################################################################
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, auc
+from sklearn.preprocessing import label_binarize
+from itertools import cycle
+
 def plot_roc_curve(trained_model, val_data, target_column):
   """
   Guides the user through plotting ROC curves for the trained classification model.
@@ -165,14 +198,14 @@ def plot_roc_curve(trained_model, val_data, target_column):
   Args:
       trained_model (object): The trained classification model.
       val_data (pandas.DataFrame): The DataFrame containing the validation data (features and target).
+      target_column (str): The name of the target column.
   """
-
 
   # Check if the model is a classification model
   if not hasattr(trained_model, "predict_proba"):
+    print("This model doesn't support probability predictions. ROC curve cannot be plotted.")
     return
 
-  # Confirmation for ROC Curve Plot
   print("ROC curves show the trade-off between true positive rates (TPR) and false positive rates (FPR) at different classification thresholds.")
 
   print("\n** Would you like to visualize ROC curves? (y/n) **")
@@ -184,35 +217,47 @@ def plot_roc_curve(trained_model, val_data, target_column):
       print("Invalid choice. Please choose 'y' or 'n'.")
 
   if choice == "y":
-    print("\n** Visualizing ROC curves (for classification models only)...**")
-
-    # Import libraries for plotting (replace with your preferred library)
-    try:
-      import matplotlib.pyplot as plt
-    except ModuleNotFoundError as e:
-      print(f"\n** Required library (matplotlib) not found for plotting. Skipping ROC curve.**")
-      return
+    print("\n** Visualizing ROC curves...**")
 
     # Extract features and target
     X_val = val_data.drop(target_column, axis=1)
     y_val = val_data[target_column]
 
+    # Get the number of classes
+    n_classes = len(np.unique(y_val))
+
+    # Binarize the output for multiclass
+    y_val_bin = label_binarize(y_val, classes=np.unique(y_val))
+
     # Predict probabilities
-    y_pred_proba = trained_model.predict_proba(X_val)[:, 1]  # Assuming positive class probability
+    y_pred_proba = trained_model.predict_proba(X_val)
 
-    # Calculate ROC curve metrics
-    fpr, tpr, thresholds = roc_curve(y_val, y_pred_proba)
-    roc_auc = auc(fpr, tpr)
+    # Compute ROC curve and ROC area for each class
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
 
-    # Plot the ROC curve
-    plt.figure()
-    plt.plot(fpr, tpr, label=f'ROC curve (area = {roc_auc:.4f})')
-    plt.plot([0, 1], [0, 1], 'k--', label='No Skill')
-    plt.xlabel('False Positive Rate (FPR)')
-    plt.ylabel('True Positive Rate (TPR)')
-    plt.title('ROC Curve')
-    plt.legend()
-    plt.grid(True)
+    for i in range(n_classes):
+      fpr[i], tpr[i], _ = roc_curve(y_val_bin[:, i], y_pred_proba[:, i])
+      roc_auc[i] = auc(fpr[i], tpr[i])
+
+    print("Close the plot window to continue with this program.")
+
+    # Plot ROC curves
+    plt.figure(figsize=(10, 8))
+    colors = cycle(['blue', 'red', 'green', 'yellow', 'purple', 'orange'])
+    
+    for i, color in zip(range(n_classes), colors):
+      plt.plot(fpr[i], tpr[i], color=color, lw=2,
+               label=f'ROC curve of class {i} (area = {roc_auc[i]:.2f})')
+
+    plt.plot([0, 1], [0, 1], 'k--', lw=2)
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver Operating Characteristic (ROC) Curve')
+    plt.legend(loc="lower right")
     plt.show()
 
   else:
@@ -223,280 +268,162 @@ def plot_roc_curve(trained_model, val_data, target_column):
 # Precision-Recall Curves (for Classification)
 ########################################################################################
 def plot_precision_recall_curve(trained_model, val_data, target_column):
-  """
-  Guides the user through plotting precision-recall curves for the trained classification model.
+    if not hasattr(trained_model, "predict_proba"):
+        print("\n** This function is only applicable for classification models with probability prediction capabilities. Skipping precision-recall curve.**")
+        return
 
-  Args:
-      trained_model (object): The trained classification model.
-      val_data (pandas.DataFrame): The DataFrame containing the validation data (features and target).
-  """
+    print("Precision-recall curves show the trade-off between precision and recall at different classification thresholds.")
+    if not user_confirms("Would you like to visualize precision-recall curves?"):
+        return
 
-
-  # Check if the model is a classification model
-  if not hasattr(trained_model, "predict_proba"):
-    print("\n** This function is only applicable for classification models with probability prediction capabilities (predict_proba). Skipping precision-recall curve.**")
-    return
-
-  # Confirmation for Precision-Recall Curve Plot
-  print("Precision-recall curves show the trade-off between precision (minimizing false positives) and recall (minimizing false negatives) at different classification thresholds.")
-  print("\n** Would you like to visualize precision-recall curves? (y/n) **")
-  while True:
-    choice = input().lower()
-    if choice in ["y", "n"]:
-      break
-    else:
-      print("Invalid choice. Please choose 'y' or 'n'.")
-
-  if choice == "y":
-    print("\n** Visualizing precision-recall curves (for classification models only)...**")
-
-    # Import libraries for plotting (replace with your preferred library)
-    try:
-      import matplotlib.pyplot as plt
-    except ModuleNotFoundError as e:
-      print(f"\n** Required library (matplotlib) not found for plotting. Skipping precision-recall curve.**")
-      return
-
-    # Extract features and target
     X_val = val_data.drop(target_column, axis=1)
     y_val = val_data[target_column]
+    
+    # Handle multiclass
+    n_classes = len(np.unique(y_val))
+    if n_classes > 2:
+        y_val_bin = label_binarize(y_val, classes=np.unique(y_val))
+        y_pred_proba = trained_model.predict_proba(X_val)
+        
+        plt.figure(figsize=(10, 8))
+        for i in range(n_classes):
+            precision, recall, _ = precision_recall_curve(y_val_bin[:, i], y_pred_proba[:, i])
+            plt.plot(recall, precision, label=f'Class {i}')
+    else:
+        y_pred_proba = trained_model.predict_proba(X_val)[:, 1]
+        precision, recall, _ = precision_recall_curve(y_val, y_pred_proba)
+        plt.plot(recall, precision)
 
-    # Predict probabilities
-    y_pred_proba = trained_model.predict_proba(X_val)[:, 1]  # Assuming positive class probability
+    print("Close the plot window to continue with this program.")
 
-    # Calculate precision-recall curve metrics
-    precision, recall, thresholds = precision_recall_curve(y_val, y_pred_proba)
-
-    # Plot the precision-recall curve
-    plt.figure()
-    plt.plot(recall, precision, label='Precision-Recall Curve')
     plt.xlabel('Recall')
     plt.ylabel('Precision')
     plt.title('Precision-Recall Curve')
-    plt.legend()
+    if n_classes > 2:
+        plt.legend()
     plt.grid(True)
     plt.show()
-
-  else:
-    print("\n** Skipping precision-recall curve visualization.**")
-
 
 ########################################################################################
 # SHAP Explanations
 ########################################################################################
 def explain_with_shap(trained_model, val_data, target_column, explainer_type="force_plot"):
-  """
-  Guides the user through generating SHAP explanations for the trained model (if shap library is available).
+    if not SHAP_AVAILABLE:
+        print("\n** SHAP library not found. SHAP explanations are unavailable.**")
+        return
 
-  Args:
-      trained_model (object): The trained model (any model supported by shap).
-      val_data (pandas.DataFrame): The DataFrame containing the validation data (features and target).
-      explainer_type (str, optional): The type of SHAP explainer to use (e.g., "force_plot", "tree_explainer"). Defaults to "force_plot".
-  """
+    if not user_confirms("Would you like to generate SHAP explanations?"):
+        return
 
-  if not SHAP_AVAILABLE:
-    print("\n** SHAP library not found. SHAP explanations are unavailable.**")
-    return
-
-
-  # Confirmation for SHAP Explanations
-  print("\n** Would you like to generate SHAP explanations? (y/n) **")
-  print("SHAP explains how each feature contributes to a model's prediction for a specific data point.")
-
-  while True:
-    choice = input().lower()
-    if choice in ["y", "n"]:
-      break
-    else:
-      print("Invalid choice. Please choose 'y' or 'n'.")
-
-  if choice == "y":
     print("\n** Generating SHAP explanations (may take some time)...**")
 
-    # Extract features and a single data point for explanation (can be modified to explain multiple points)
     X_val = val_data.drop(target_column, axis=1)
-    # Choose a data point for explanation (e.g., first row)
-    instance = X_val.iloc[0].values.reshape(1, -1)  # Reshape for single instance
+    instance = X_val.iloc[0].values.reshape(1, -1)
 
-    # Create a SHAP explainer (consider different explainers based on model type)
-    if explainer_type == "force_plot":
-      explainer = shap.Explainer(trained_model.predict, instance)  # Force plot explainer
-    elif explainer_type == "tree_explainer" and hasattr(trained_model, "tree_"):
-      explainer = shap.TreeExplainer(trained_model)  # Tree explainer for tree-based models (if applicable)
+    if explainer_type == "tree_explainer" and hasattr(trained_model, "tree_"):
+        explainer = shap.TreeExplainer(trained_model)
     else:
-      print(f"\n** Unsupported explainer type: {explainer_type}. Using force_plot explainer.")
-      explainer = shap.Explainer(trained_model.predict, instance)  # Fallback to force plot
+        explainer = shap.Explainer(trained_model.predict, instance)
 
-    # Generate SHAP explanation
     shap_values = explainer(instance)
 
-    # Display SHAP explanation (using shap library functions)
     try:
-      shap.force_plot(explainer.base_value, instance, shap_values, feature_names=X_val.columns)  # Force plot for any model
+        print("Close the plot window to continue with this program.")
+        shap.plots.waterfall(shap_values[0])
     except:
-      if explainer_type == "tree_explainer":
-        shap.summary_plot(shap_values, instance, feature_names=X_val.columns)  # Tree explainer summary plot (if applicable)
-      else:
-        print("\n** Unable to display SHAP explanation using the chosen explainer type. Try 'force_plot'.")
-
-  else:
-    print("\n** Skipping SHAP explanations.**")
-
+        print("\n** Unable to display SHAP explanation. Try a different explainer type.")
 
 ########################################################################################
 # Partial Dependence Plots (PDPs)
 ########################################################################################
-def plot_partial_dependence(trained_model, val_data, target_column,  feature_names=None):
-  """
-  Guides the user through generating and visualizing partial dependence plots (PDPs) for the trained model.
+def plot_partial_dependence(trained_model, val_data, target_column, feature_names=None):
+    if not user_confirms("Would you like to visualize Partial Dependence Plots (PDPs)?"):
+        return
 
-  Args:
-      trained_model (object): The trained model (any model supported by sklearn.inspection.partial_dependence).
-      val_data (pandas.DataFrame): The DataFrame containing the validation data (features and target).
-      feature_names (list, optional): The list of feature names (in the same order as the data). Defaults to None.
-  """
-
-
-  # Confirmation for PDP Visualization
-  print("PDPs show the average effect of a single feature on the model's prediction, marginalizing over other features.")
-  print("\n** Would you like to visualize PDPs? (y/n) **")
-  while True:
-    choice = input().lower()
-    if choice in ["y", "n"]:
-      break
-    else:
-      print("Invalid choice. Please choose 'y' or 'n'.")
-
-  if choice == "y":
-    print("\n** Visualizing partial dependence plots (PDPs)...**")
-
-    # Extract features and target
     X_val = val_data.drop(target_column, axis=1)
-    y_val = val_data[target_column]
+    feature_names = feature_names or X_val.columns.tolist()
 
-    # Get feature names if not provided
-    if feature_names is None:
-      feature_names = X_val.columns.tolist()
-
-    # Choose a feature for PDP (can be modified to plot multiple features)
-    print("\n** Select a feature to visualize its PDP: ")
-    for i, feature_name in enumerate(feature_names):
-      print(f"{i+1}. {feature_name}")
     while True:
-      try:
-        feature_index = int(input()) - 1
-        if 0 <= feature_index < len(feature_names):
-          break
-        else:
-          print("Invalid choice. Please choose a feature number between 1 and", len(feature_names))
-      except ValueError:
-        print("Invalid input. Please enter a number.")
+        print("\n** Select a feature to visualize its PDP: ")
+        for i, feature_name in enumerate(feature_names, 1):
+            print(f"{i}. {feature_name}")
+        print(f"{len(feature_names) + 1}. Exit")
 
-    # Calculate PDP using partial_dependence
-    pdp, residuals = partial_dependence(trained_model, X_val, features=[feature_index])
+        feature_choice = get_valid_input("Enter your choice: ", lambda x: 1 <= int(x) <= len(feature_names) + 1)
+        
+        if feature_choice == len(feature_names) + 1:
+            break
 
-    # Plot the PDP
-    try:
-      import matplotlib.pyplot as plt
-      plt.figure()
-      plt.plot(X_val.iloc[:, feature_index], pdp.ravel(), label=feature_names[feature_index])  # Assuming single feature
-      plt.xlabel(feature_names[feature_index])
-      plt.ylabel("Average Prediction")
-      plt.title("Partial Dependence Plot")
-      plt.legend()
-      plt.grid(True)
-      plt.show()
-    except ModuleNotFoundError as e:
-      print(f"\n** Required library (matplotlib) not found for plotting. Skipping PDP.**")
-      return
+        feature_index = feature_choice - 1
+        
+        pdp = partial_dependence(trained_model, X_val, features=[feature_names[feature_index]])
+        print("Close the plot window to continue with this program.")
 
-  else:
-    print("\n** Skipping partial dependence plot visualization.**")
+        plt.figure(figsize=(10, 6))
+        plt.plot(pdp['values'][0], pdp['average'][0])
+        plt.xlabel(feature_names[feature_index])
+        plt.ylabel("Partial Dependence")
+        plt.title(f"Partial Dependence Plot for {feature_names[feature_index]}")
+        plt.grid(True)
+        plt.show()
+
+        if not user_confirms("Would you like to visualize another PDP?"):
+            break
 
 
 ########################################################################################
 # Feature Importance Analysis
 ########################################################################################
 def analyze_feature_importance(trained_model, val_data, target_column, feature_names=None):
-  """
-  Guides the user through analyzing feature importance for the trained model.
+    if not user_confirms("Would you like to analyze feature importance?"):
+        return
 
-  Args:
-      trained_model (object): The trained model (any model supported by sklearn.inspection.permutation_importance).
-      val_data (pandas.DataFrame): The DataFrame containing the validation data (features and target).
-      feature_names (list, optional): The list of feature names (in the same order as the data). Defaults to None.
-  """
-
-
-  # Confirmation for Feature Importance Analysis
-  print("\n** Would you like to analyze feature importance? (y/n) **")
-  print("Feature importance helps identify features that have a greater impact on the model's predictions.")
-
-  while True:
-    choice = input().lower()
-    if choice in ["y", "n"]:
-      break
-    else:
-      print("Invalid choice. Please choose 'y' or 'n'.")
-
-  if choice == "y":
-    print("\n** Analyzing feature importance...**")
-    # Extract features and target
     X_val = val_data.drop(target_column, axis=1)
     y_val = val_data[target_column]
+    feature_names = feature_names or X_val.columns.tolist()
 
-    # Get feature names if not provided
-    if feature_names is None:
-      feature_names = X_val.columns.tolist()
+    results = permutation_importance(trained_model, X_val, y_val, n_repeats=10, random_state=42)
+    
+    feature_importances = sorted(zip(feature_names, results.importances_mean), key=lambda x: x[1], reverse=True)
+    print("Close the plot window to continue with this program.")
 
-    # Calculate feature importance using permutation_importance
-    results = permutation_importance(trained_model, X_val, y_val, scoring="accuracy")  # Replace 'accuracy' with relevant metric
-
-    # Print feature importances (sorted by importance)
-    feature_importances = results.importances_mean
-    feature_importances_sorted = sorted(zip(feature_names, feature_importances), key=lambda x: x[1], reverse=True)
-    print("\n** Feature Importance Ranking: **")
-    for i, (feature_name, importance) in enumerate(feature_importances_sorted):
-      print(f"{i+1}. {feature_name}: {importance:.4f}")
-
-  else:
-    print("\n** Skipping feature importance analysis.**")
-
+    plt.figure(figsize=(10, 6))
+    plt.barh([f[0] for f in feature_importances], [f[1] for f in feature_importances])
+    plt.xlabel("Importance")
+    plt.title("Feature Importance")
+    plt.tight_layout()
+    plt.show()
 
 ########################################################################################
 # Model Persistence
 ########################################################################################
 def save_model(trained_model, save_path):
-  """
-  Guides the user through saving the trained model.
-
-  Args:
-      trained_model (object): The trained model to save.
-      save_path (str): The path (including filename) to save the model.
-  """
-
-
-  # Confirmation for Model Persistence
-  print("\n** Would you like to save the trained model? (y/n) **")
-  print("This allows you to use the trained model for future predictions without retraining.")
-
-  while True:
-    choice = input().lower()
-    if choice in ["y", "n"]:
-      break
-    else:
-      print("Invalid choice. Please choose 'y' or 'n'.")
-
-  if choice == "y":
-    print("\n** Saving the trained model (optional)...**")
+    if not user_confirms("Would you like to save the trained model?"):
+        return
 
     try:
-      # Save the model using pickle
-      with open(save_path, 'wb') as f:
-        pickle.dump(trained_model, f)
-      print(f"\n** Model saved successfully to: {save_path}**")
+        with open(save_path, 'wb') as f:
+            pickle.dump(trained_model, f)
+        print(f"\n** Model saved successfully to: {save_path} **")
     except Exception as e:
-      print(f"\n** Error saving the model: {e}**")
+        print(f"\n** Error saving the model: {e} **")
 
-  else:
-    print("\n** Skipping model persistence.**")
+########################################################################################
+# Helper Functions
+########################################################################################
+def user_confirms(message):
+    while True:
+        choice = input(f"{message} (y/n): ").lower()
+        if choice in ["y", "n"]:
+            return choice == "y"
+        print("Invalid choice. Please choose 'y' or 'n'.")
+
+def get_valid_input(prompt, validator):
+    while True:
+        try:
+            user_input = int(input(prompt))
+            if validator(user_input):
+                return user_input
+        except ValueError:
+            pass
+        print("Invalid input. Please try again.")
