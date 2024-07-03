@@ -7,6 +7,7 @@ from analysis import generate_classification_report, visualize_confusion_matrix,
 def main():
     # Reading Data
     # Get user input for file path
+    print("Welcome to SimSightsAI! Here we will walk you through the machine learning pipeline to find valuable insights and create predictive models with your data.")
     filepath = input("\n\nPlease enter the path to your data file (CSV, Excel, TSV, JSON): ")
 
     try:
