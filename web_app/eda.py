@@ -26,10 +26,11 @@ def visualize_numerical(data):
   Args:
       data (pandas.DataFrame): The DataFrame containing the data.
   """
+  print("\n\n\nWe can now proceed to visualize your data's numerical features.")
   numeric_cols = data.select_dtypes(include=['number']).columns.tolist()
   
   if not numeric_cols:
-    print("No numeric features found in the data.")
+    print("  - No numeric features found in the data. Moving on")
     return
 
   while True:
@@ -60,6 +61,7 @@ def visualize_categorical(data):
   Args:
       data (pandas.DataFrame): The DataFrame containing the data.
   """
+  print("\n\n\nNext, we can visualize your data's categorical features.")
   categorical_cols = data.select_dtypes(include=['object', 'category']).columns.tolist()
   
   if not categorical_cols:
@@ -167,6 +169,18 @@ def analyze_correlations(data):
   """
   correlation_type = None
   while correlation_type not in ['pearson', 'spearman', 'no']:
+    print("""
+    \nNow that you have observed/saved your data visualizations, you can now identify correlations between variables in your data!\n\nChoose the correlation type that best suits your data:
+
+      * pearson: This is the most common correlation coefficient, suitable for continuous, normally distributed data.
+                It measures the linear relationship between two variables.
+
+      * spearman: This is a non-parametric correlation coefficient, suitable for ordinal or continuous data that may not be normally distributed.
+                It measures the monotonic relationship between two variables (increasing or decreasing together).
+
+      * no: Skip correlation analysis altogether.
+    """)
+
     choice = input("Choose correlation type (pearson, spearman, or 'no' to skip): ").lower()
     if choice in ['pearson', 'spearman']:
       correlation_type = choice
@@ -189,11 +203,17 @@ def analyze_correlations(data):
       print(correlation_matrix)
 
   # Analyze associations between numeric and categorical features (using Chi-Square)
+  print("\n\nNow, we will analyze associations between your data's numerical and categorical features using Chi-Square.")
+  print("Chi-Square tests compare observed data with expected data to assess if there's a significant association between them.")
+  print("A p-value < .05 indicates a statistically significant association found between them.")
+  print("For example: Younger age groups (18-24, 25-34) tend to favor Pop music more frequently (80, 60) compared to older groups (40, 20).")
+  print("**Important note**: a chi-square test only tells you there's an association, not necessarily a causal relationship.")
+  print("Computing Chi-Square tests...")
   for col in numeric_cols:
     for cat_col in categorical_cols:
       contingency_table = pd.crosstab(data[col], data[cat_col])
       chi2, pval, deg_of_freedom, expected_freq = chi2_contingency(contingency_table.values)
-      print(f"Chi-Square Test between {col} and {cat_col}:")
+      print(f"\nChi-Square Test between {col} and {cat_col}:")
       print(f"  p-value: {pval:.4f}")
       if pval < 0.05:
         print("  - Statistically significant association found.")
@@ -206,7 +226,7 @@ def analyze_correlations(data):
       if cat_col1 != cat_col2:  # Avoid self-comparison
         contingency_table = pd.crosstab(data[cat_col1], data[cat_col2])
         chi2, pval, deg_of_freedom, expected_freq = chi2_contingency(contingency_table.values)
-        print(f"Chi-Square Test between {cat_col1} and {cat_col2}:")
+        print(f"\nChi-Square Test between {cat_col1} and {cat_col2}:")
         print(f"  p-value: {pval:.4f}")
         if pval < 0.05:
           print("  - Statistically significant association found.")

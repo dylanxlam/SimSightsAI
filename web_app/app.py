@@ -39,7 +39,7 @@ def upload_data():
 def clean_data_route():
   if request.method == "GET":
     # Display the missing value handling form
-    return render_template("handle_missing_values.html")
+    return 
   else:
     # Access data from session (replace with your data loading logic)
     data = session.get("uploaded_data")
@@ -165,13 +165,10 @@ def train_pipeline():
   data = request.form.get("data")
 
   # Preprocess the data
-  features, target = preprocess_data(cleaned_data)
 
   # Train the model (assuming chosen_model is defined elsewhere)
-  trained_model = train_model(features, target, chosen_model)
 
   # Model Analysis
-  generate_classification_report(trained_model)
 
 if __name__ == "__main__":
   app.run(debug=True)  # Set debug=False for production deployment

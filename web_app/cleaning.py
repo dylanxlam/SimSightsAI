@@ -57,15 +57,17 @@ def handle_missing_values(data):
       pandas.DataFrame: The DataFrame with missing values handled.
   """
 
+  print("\n\n\nWe will start by dealing with missing values, if any.")
+  print("Scanning for missing values...")
   # Check for missing values
   missing_values = data.isnull().sum()
 
   if missing_values.sum() == 0:
-    print("No missing values detected in the data!")
+    print("  - No missing values detected in the data!")
     return data
 
   # Inform user about missing values
-  print("Missing values detected in the following columns:")
+  print("  - Missing values detected in the following columns:")
   print(missing_values[missing_values > 0])
   print("\nIt's crucial to address missing values before further analysis.")
 
@@ -77,10 +79,10 @@ def handle_missing_values(data):
       confirmation = input("Proceed with deletion? (y/n): ").lower()
       if confirmation == "y":
         data = data.dropna()
-        print("Rows with missing values have been deleted.")
+        print("\nRows with missing values have been deleted.")
         return data
       else:
-        print("Deletion cancelled.")
+        print("\nDeletion cancelled.")
 
     elif method_choice == "imputation":
       for column in data.columns[data.isnull().any()]:
@@ -95,33 +97,33 @@ def handle_missing_values(data):
                 data[column].fillna(data[column].median(), inplace=True)
               else:
                 data[column].fillna(data[column].mode()[0], inplace=True)
-              print(f"Missing values in {column} imputed using {impute_choice}.")
+              print(f"\nMissing values in {column} imputed using {impute_choice}.")
               break
             else:
-              print("Invalid choice. Please choose mean, median, or mode.")
+              print("\nInvalid choice. Please choose mean, median, or mode.")
         else:
           while True:
             cat_method_choice = input("Choose a method for categorical data (mode/create_category): ").lower()
             if cat_method_choice == "mode":
               data[column].fillna(data[column].mode()[0], inplace=True)
-              print(f"Missing values in {column} imputed using mode.")
+              print(f"\nMissing values in {column} imputed using mode.")
               break
             elif cat_method_choice == "create_category":
               data[column].fillna("Unknown", inplace=True)
-              print(f"Missing values in {column} replaced with 'Unknown' category.")
+              print(f"\nMissing values in {column} replaced with 'Unknown' category.")
               break
             else:
-              print("Invalid choice. Please choose mode or create_category.")
+              print("\nInvalid choice. Please choose mode or create_category.")
 
-      print("\nAll missing values have been handled.")
+      print("\nAll missing values have been imputed.")
       return data
 
     elif method_choice == "quit":
-      print("Exiting without handling missing values.")
+      print("\nExiting without handling missing values.")
       return data
 
     else:
-      print("Invalid method chosen. Please choose deletion, imputation, or quit.")
+      print("\nInvalid method chosen. Please choose deletion, imputation, or quit.")
 
 
 
@@ -138,6 +140,9 @@ def identify_and_handle_outliers(data):
     Returns:
         pandas.DataFrame: The modified DataFrame (potentially with outliers left unchanged).
     """
+
+    print("\n\n\nWe will now move onto handling outliers, if any.")
+    print("Scanning for outliers...")
     numerical_cols = data.select_dtypes(include=[np.number])
     outliers_exist = False  # Flag to track presence of outliers
 
@@ -155,51 +160,53 @@ def identify_and_handle_outliers(data):
 
     if outlier_count > 0:
         outliers_exist = True
-        print(f"Found {outlier_count} potential outliers in column '{col}'.")
+        print(f"  - Found {outlier_count} potential outliers in column '{col}'.")
         print("""
-        Outlier Treatment Options:
+        \nOutlier Treatment Options:
 
         * Imputation: Replaces outliers with estimates (mean, median, mode) to preserve data.
         * Removal: Removes rows containing outliers, suitable for errors or irrelevant data.
         * Keep: Leave outliers unchanged for further analysis (consider impact on results).
 
-        Choosing the right option depends on the number of outliers, their impact on analysis, and data quality.
+        Choosing the right option depends on the number of outliers, their impact on analysis, and data quality.\n
         """)
         action = input("Do you want to (i)mpute, (r)emove, or (k)eep outliers (i/r/k)? ").lower()
         if action == "i":
             # FUTURE DEVELOPMENT: See markdown below this cell to determine which imputation method to choose.
             # Choose imputation method
             print("""
-            Choosing the Right Imputation Method:
+            \nChoosing the Right Imputation Method:
 
-            * **Mean:** Use mean if the data is normally distributed (consider histograms or normality tests). Mean is sensitive to outliers, so consider if there are extreme values that might distort the average.
+            * Mean: Use mean if the data is normally distributed (consider histograms or normality tests). Mean is sensitive to outliers, so consider if there are extreme values that might distort the average.
 
-            * **Median:** Use median if the data is skewed (uneven distribution) or has extreme outliers. Median is less sensitive to outliers compared to mean and represents the 'middle' value in the data.
+            * Median: Use median if the data is skewed (uneven distribution) or has extreme outliers. Median is less sensitive to outliers compared to mean and represents the 'middle' value in the data.
 
-            * **Mode:** Use mode for categorical data with a dominant value. Mode represents the most frequent value in the data and is suitable for non-numerical categories.
+            * Mode: Use mode for categorical data with a dominant value. Mode represents the most frequent value in the data and is suitable for non-numerical categories.\n
             """)
             imputation_method = input("Choose imputation method (mean/median/mode): ").lower()
             if imputation_method == "mean":
                 data.loc[numerical_cols[col].index[numerical_cols[col] < lower_bound | numerical_cols[col] > upper_bound], col] = numerical_cols[col].mean()
-                print(f"Imputing outliers in '{col}' with mean.")
+                print(f"\nImputing outliers in '{col}' with mean.")
             elif imputation_method == "median":
                 data.loc[numerical_cols[col].index[numerical_cols[col] < lower_bound | numerical_cols[col] > upper_bound], col] = numerical_cols[col].median()
-                print(f"Imputing outliers in '{col}' with median.")
+                print(f"\nImputing outliers in '{col}' with median.")
             else:
                 # Mode imputation (consider using libraries like scikit-learn for categorical data handling)
                 data.loc[numerical_cols[col].index[numerical_cols[col] < lower_bound | numerical_cols[col] > upper_bound], col] = numerical_cols[col].mode()[0]  # Assuming single most frequent value
-                print(f"Imputing outliers in '{col}' with mode (considering first most frequent value).")
+                print(f"\nImputing outliers in '{col}' with mode (considering first most frequent value).")
         elif action == "r":
             # Remove rows with outliers
             data = data[~(numerical_cols[col] < lower_bound | numerical_cols[col] > upper_bound)]
-            print(f"Removing rows with outliers in column '{col}'.")
+            print(f"\nRemoving rows with outliers in column '{col}'.")
+
         elif action == "k":
-            print(f"Keeping outliers in column '{col}' for further analysis.")
+            print(f"\nKeeping outliers in column '{col}' for further analysis.")
         else:
-            print(f"Invalid choice. Outliers in '{col}' remain unaddressed.")
+            print(f"\nInvalid choice. Outliers in '{col}' remain unaddressed.")
+
 
     if not outliers_exist:
-        print("No outliers detected in numerical columns.")
+        print("  - No outliers detected in numerical columns.")
 
     return data
 
@@ -218,37 +225,40 @@ def handle_duplicates(data):
       pandas.DataFrame: The DataFrame potentially with duplicates removed.
   """
 
+
+  print("/n/n/nWe will now move onto handing duplicates, if any.")
+  print("Scanning for duplicated rows...")
   # Find duplicates
   duplicates = data.duplicated()
 
   # Check if any duplicates exist
   if not duplicates.any():
-    print("No duplicate rows found in your data. Moving on...")
+    print("  - No duplicate rows found in your data.")
     return data
 
   # Print a sample of duplicates (avoid overwhelming the user)
-  print("Found potential duplicate rows. Here are 5 samples:")
+  print("  - Found potential duplicate rows. Here are 5 samples:")
   print(data[duplicates].head())
 
   # Explain duplicate handling options
   print("\nHow would you like to handle these duplicates?")
   print("  1. Remove all duplicates (keeps the first occurrence)")
   print("  2. Keep all duplicates (may skew analysis)")
-  print("  3. View all duplicates (for manual selection)")
+  print("  3. View all duplicates (for manual selection)\n")
 
   while True:
     choice = input("Enter your choice (1, 2, or 3): ")
 
     # Handle user choice
     if choice == "1":
-      print("Removing all duplicates (keeping the first occurrence).")
+      print("\nRemoving all duplicates (keeping the first occurrence).")
       data = data.drop_duplicates()
       break  # Exit the loop after a valid choice
     elif choice == "2":
-      print("Keeping all duplicates (may skew analysis).")
+      print("\nKeeping all duplicates (may skew analysis).")
       break  # Exit the loop after a valid choice
     elif choice == "3":
-      print("Here are all duplicates. Review and choose rows to keep (comma-separated indices):")
+      print("\nHere are all duplicates. Review and choose rows to keep (comma-separated indices):")
       print(data[duplicates])
       keep_indices = input("Enter indices of rows to KEEP (or 'all' to keep all): ")
       if keep_indices.lower() == "all":
@@ -258,12 +268,12 @@ def handle_duplicates(data):
           # Convert user input to a list of integers (indices)
           keep_indices = [int(i) for i in keep_indices.split(",")]
           data = data.iloc[keep_indices]  # Keep rows based on indices
-          print(f"Keeping rows with indices: {keep_indices}")
+          print(f"\nKeeping rows with indices: {keep_indices}")
         except ValueError:
-          print("Invalid input. Please enter comma-separated integers or 'all'.")
+          print("\nInvalid input. Please enter comma-separated integers or 'all'.")
       break  # Exit the loop after a valid choice
     else:
-      print("Invalid choice. Please enter 1, 2, or 3.")
+      print("\nInvalid choice. Please enter 1, 2, or 3.")
 
   return data
 
@@ -282,25 +292,28 @@ def handle_formatting(data):
       pandas.DataFrame: The DataFrame potentially with formatting inconsistencies fixed.
   """
 
+
+  print("\n\n\nWe will now move onto handling data formatting inconsistencies, if any.")
+  print("Scanning for formatting inconsistencies...")
   # Check for date formatting inconsistencies
   date_cols = [col for col in data if pd.api.types.is_datetime64_dtype(data[col])]
   if date_cols:
-    print("Found potential date formatting inconsistencies in columns:")
+    print("  - Found potential date formatting inconsistencies in columns:")
     for col in date_cols:
       print(f"  - {col}")
     print("  (Inconsistent date formats can lead to errors during analysis.)\n")
   else:
-     print("No potential date formatting inconsistencies found.")
+     print("  - No potential date formatting inconsistencies found.")
 
   # Check for currency formatting inconsistencies
   currency_cols = [col for col in data if pd.api.types.is_numeric_dtype(data[col]) and any(char in data[col] for char in r"$£€¥₱")]
   if currency_cols:
-    print("Found potential currency formatting inconsistencies in columns:")
+    print("  - Found potential currency formatting inconsistencies in columns:")
     for col in currency_cols:
       print(f"  - {col} (mixed currency symbols or no symbol)")
     print("  (Inconsistent currency formatting can hinder analysis.)\n")
   else:
-    print("No potential currency formatting inconsistencies found")
+    print("  - No potential currency formatting inconsistencies found")
 
   # Offer choices if inconsistencies found
   if date_cols or currency_cols:
@@ -329,9 +342,9 @@ def handle_formatting(data):
                 data[col] = pd.to_datetime(data[col], format="%Y/%m/%d")
               valid_choice = True
             else:
-              print("Invalid choice. Please choose from options 1-5.")
+              print("\nInvalid choice. Please choose from options 1-5.")
           except ValueError:
-            print(f"Error parsing dates in '{col}'. Keeping existing format.")
+            print(f"\nError parsing dates in '{col}'. Keeping existing format.")
 
       for col in currency_cols:
         print(f"\nChoose a desired currency symbol for '{col}':")
@@ -348,9 +361,9 @@ def handle_formatting(data):
           # Remove all currency symbols (assuming text data)
           data[col] = data[col].str.replace(r"[£€¥₱$]", "", regex=True)
         else:
-          print("Invalid choice. Keeping existing formatting for", col)
-      print("Formatting potentially fixed in some columns.")
+          print("\nInvalid choice. Keeping existing formatting for", col)
+      print("\nFormatting potentially fixed in some columns.")
     else:
-      print("Keeping existing formatting (may cause issues during analysis).")
+      print("\nKeeping existing formatting (may cause issues during analysis).")
 
   return data
